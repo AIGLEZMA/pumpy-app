@@ -70,7 +70,7 @@ fun AccountMenu(onLogout: () -> Unit) {
                 onLogout()
                 expanded = false
             }) {
-                Text("Se déconnecter")
+                Text(text = "Se déconnecter", color = MaterialTheme.colorScheme.error)
             }
         }
     }
