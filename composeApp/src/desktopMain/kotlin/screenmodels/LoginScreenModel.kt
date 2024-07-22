@@ -1,0 +1,38 @@
+package screenmodels
+
+import DatabaseProvider
+import Password
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.launch
+import models.User
+
+class LoginScreenModel : ScreenModel {
+    var loginState by mutableStateOf(LoginState())
+        private set
+
+    fun login(username: String, password: String) {
+        screenModelScope.launch {
+            val userDao = DatabaseProvider.getDatabase().userDao()
+            val user = userDao.getUserByUsername(username)
+            loginState = if (user != null) {
+                if (Password.verify(password, user.password)) {
+                    LoginState(user = user, isAuthenticated = true)
+                } else {
+                    LoginState(errorMessage = "Mot de passe incorrecte")
+                }
+            } else {
+                LoginState(errorMessage = "Utilisateur non trouvé")
+            }
+        }
+    }
+
+    data class LoginState(
+        val user: User? = null,
+        val isAuthenticated: Boolean = false,
+        val errorMessage: String? = null
+    )
+}
