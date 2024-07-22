@@ -11,6 +11,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
 import models.User
 
+// TODO: use the User object instead of the ID
 class AddEditUserScreenModel(private val userId: Long? = null) : ScreenModel {
     var userState by mutableStateOf(UserState())
         private set
