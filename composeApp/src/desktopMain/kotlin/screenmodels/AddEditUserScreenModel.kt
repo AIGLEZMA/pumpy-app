@@ -1,6 +1,7 @@
 package screenmodels
 
 import DatabaseProvider
+import Logger
 import Password
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,10 +21,10 @@ class AddEditUserScreenModel(private val userId: Long? = null) : ScreenModel {
         }
     }
 
-    private fun loadUser(userId: Long) {
+    private fun loadUser(id: Long) {
         screenModelScope.launch {
             val userDao = DatabaseProvider.getDatabase().userDao()
-            val user = userDao.getUserById(userId)
+            val user = userDao.getUserById(id)
             userState = userState.copy(
                 username = user!!.username,
                 password = "",

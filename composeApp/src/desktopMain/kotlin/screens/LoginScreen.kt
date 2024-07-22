@@ -93,8 +93,8 @@ class LoginScreen : Screen {
                     when {
                         loginState.isAuthenticated -> {
                             LaunchedEffect(Unit) {
-                                navigator.push(TestScreen())
-                                Logger.debug("User (username: ${loginState.user!!.username}) authenticated.")
+                                navigator.push(AddEditUserScreen(loginState.user!!.id))
+                                Logger.debug("User (username: ${loginState.user.username}) authenticated.")
                             }
                         }
 
