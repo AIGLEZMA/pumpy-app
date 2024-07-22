@@ -27,7 +27,7 @@ fun Header(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -35,7 +35,10 @@ fun Header(
             query = query,
             onQueryChange = onQueryChange,
             onSearch = onSearch,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .padding(horizontal = 8.dp)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -73,7 +76,6 @@ fun AccountMenu(onLogout: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
@@ -91,20 +93,6 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-//            var selectedIndex by remember { mutableStateOf(0) }
-//            val options = listOf("Day", "Month", "Week")
-//            SingleChoiceSegmentedButtonRow {
-//                options.forEachIndexed { index, label ->
-//                    SegmentedButton(
-//                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-//                        onClick = { selectedIndex = index },
-//                        selected = index == selectedIndex
-//                    ) {
-//                        Text(label)
-//                    }
-//                }
-//            }
-
             DropdownMenuItem(onClick = {
                 onToggleTheme()
                 expanded = false

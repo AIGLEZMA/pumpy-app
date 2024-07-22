@@ -1,6 +1,9 @@
 package ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
@@ -16,11 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,34 +32,32 @@ fun SearchField(
 ) {
     var active by rememberSaveable { mutableStateOf(false) }
 
-    Box(modifier.semantics { isTraversalGroup = true }) {
-        SearchBar(
-            modifier = Modifier.align(Alignment.TopCenter).semantics { traversalIndex = 0f },
-            placeholder = { Text("Rechercher...") },
-            onSearch = {
-                onSearch(query)
-                println("On search called for $query")
-            },
-            query = query,
-            active = false,
-            onActiveChange = {
-                active = false
-                println("On active change to $active")
-            },
-            onQueryChange = {
-                println("Query changed from $query to $it")
-                onQueryChange(it)
-            },
-            leadingIcon = { Icon(Icons.Default.Search, "Search") },
-            trailingIcon = {
-                IconButton(
-                    onClick = { onQueryChange("") },
-                    content = { Icon(Icons.Default.Close, "Close") }
-                )
-            }
-        ) {
-
+    SearchBar(
+        modifier = modifier,
+        placeholder = { Text("Rechercher...") },
+        onSearch = {
+            onSearch(query)
+            println("On search called for $query")
+        },
+        query = query,
+        active = false,
+        onActiveChange = {
+            active = false
+            println("On active change to $active")
+        },
+        onQueryChange = {
+            println("Query changed from $query to $it")
+            onQueryChange(it)
+        },
+        leadingIcon = { Icon(Icons.Default.Search, "Search") },
+        trailingIcon = {
+            IconButton(
+                onClick = { onQueryChange("") },
+                content = { Icon(Icons.Default.Close, "Close") }
+            )
         }
+    ) {
+
     }
 }
 
