@@ -16,6 +16,8 @@ class LoginScreenModel : ScreenModel {
 
     fun login(username: String, password: String) {
         screenModelScope.launch {
+            loginState = loginState.copy(isLoading = true)
+
             val userDao = DatabaseProvider.getDatabase().userDao()
             val user = userDao.getUserByUsername(username)
             loginState = if (user != null) {
@@ -33,6 +35,7 @@ class LoginScreenModel : ScreenModel {
     data class LoginState(
         val user: User? = null,
         val isAuthenticated: Boolean = false,
-        val errorMessage: String? = null
+        val errorMessage: String? = null,
+        val isLoading: Boolean = false
     )
 }

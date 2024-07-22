@@ -85,17 +85,22 @@ class LoginScreen : Screen {
                     Text(text = "Connexion", color = Color.White)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(8.dp))
-                when {
-                    loginState.isAuthenticated -> {
-                        LaunchedEffect(Unit) {
-                            navigator.push(TestScreen())
-                            Logger.debug("User (username: ${loginState.user!!.username}) authenticated.")
+                if (loginState.isLoading) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Connexion en cours...", color = MaterialTheme.colorScheme.primary)
+                } else {
+                    when {
+                        loginState.isAuthenticated -> {
+                            LaunchedEffect(Unit) {
+                                navigator.push(TestScreen())
+                                Logger.debug("User (username: ${loginState.user!!.username}) authenticated.")
+                            }
                         }
-                    }
 
-                    loginState.errorMessage != null -> {
-                        Text(loginState.errorMessage, color = MaterialTheme.colorScheme.error)
+                        loginState.errorMessage != null -> {
+                            Text(loginState.errorMessage, color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }
