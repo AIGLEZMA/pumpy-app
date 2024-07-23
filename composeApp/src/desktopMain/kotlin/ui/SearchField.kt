@@ -1,5 +1,6 @@
 package ui
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -61,7 +62,8 @@ fun SearchField(
     }
 }
 
-// TODO: remove this text code
+
+@Preview
 @Composable
 fun TestSearchField() {
     var query by rememberSaveable { mutableStateOf("") }

@@ -1,5 +1,6 @@
 package ui
 
+import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,7 +45,9 @@ fun Header(
         Spacer(modifier = Modifier.width(8.dp))
 
         AccountMenu(onLogout = onLogout)
+
         Spacer(modifier = Modifier.width(8.dp))
+
         SettingsMenu(isDarkMode = isDarkMode, onToggleTheme = onToggleTheme)
     }
 }
@@ -103,6 +106,7 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
     }
 }
 
+@Preview
 @Composable
 fun TestHeaderScreen() {
     var query by rememberSaveable { mutableStateOf("") }
