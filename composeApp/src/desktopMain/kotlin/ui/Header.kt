@@ -4,7 +4,6 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Settings
@@ -69,12 +68,12 @@ fun AccountMenu(onLogout: () -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DropdownMenuItem(onClick = {
-                onLogout()
-                expanded = false
-            }) {
-                Text(text = "Se déconnecter", color = MaterialTheme.colorScheme.error)
-            }
+            DropdownMenuItem(
+                text = { Text(text = "Se déconnecter", color = MaterialTheme.colorScheme.error) },
+                onClick = {
+                    onLogout()
+                    expanded = false
+                })
         }
     }
 }
@@ -96,12 +95,12 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DropdownMenuItem(onClick = {
-                onToggleTheme()
-                expanded = false
-            }) {
-                Text(if (isDarkMode) "Mode clair" else "Mode sombre")
-            }
+            DropdownMenuItem(
+                text = { Text(if (isDarkMode) "Mode clair" else "Mode sombre") },
+                onClick = {
+                    onToggleTheme()
+                    expanded = false
+                })
         }
     }
 }
