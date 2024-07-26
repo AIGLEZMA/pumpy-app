@@ -231,7 +231,6 @@ class UsersScreen : Screen {
                                         }
                                     )
                                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                                    // Scroll in Material3 + Desktop
                                 }
                             }
                             VerticalScrollbar(
