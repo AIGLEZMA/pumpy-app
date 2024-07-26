@@ -50,23 +50,23 @@ class UsersScreen : Screen {
         var userToDelete by remember { mutableStateOf<User?>(null) }
 
         val loginState = loginScreenModel.loginState
-        // val allUsers = screenModel.users
+        val allUsers = screenModel.users
         // Dummy data for testing
-        val allUsers = remember {
-            mutableStateListOf(
-                User(1, "John Doe", "", true),
-                User(2, "Jane Doe", "", false),
-                User(3, "Adam Cena", "", true),
-                User(4, "Mohammed Ali", "", false),
-                User(5, "Jesus Biden", "", true),
-                User(6, "Jesus Biden", "", false),
-                User(7, "Alma Hose", "", false),
-                User(8, "Sara Trump", "", false),
-                User(9, "Ali Amine", "", false),
-                User(10, "Cristiano Messi", "", false),
-                User(11, "Lionel Ronaldo", "", false)
-            )
-        }
+//        val allUsers = remember {
+//            mutableStateListOf(
+//                User(1, "John Doe", "", true),
+//                User(2, "Jane Doe", "", false),
+//                User(3, "Adam Cena", "", true),
+//                User(4, "Mohammed Ali", "", false),
+//                User(5, "Jesus Biden", "", true),
+//                User(6, "Jesus Biden", "", false),
+//                User(7, "Alma Hose", "", false),
+//                User(8, "Sara Trump", "", false),
+//                User(9, "Ali Amine", "", false),
+//                User(10, "Cristiano Messi", "", false),
+//                User(11, "Lionel Ronaldo", "", false)
+//            )
+//        }
         val filteredUsers = allUsers.filter { user -> user.username.contains(searchQuery, ignoreCase = true) }
         val sortedUsers = filteredUsers.sortedWith(compareBy({ it.id != loginState.user?.id }, { it.username }))
 
@@ -118,7 +118,7 @@ class UsersScreen : Screen {
                         DeleteConfirmationDialog(
                             user = user,
                             onConfirm = {
-                                allUsers.remove(user)
+                                screenModel.deleteUser(userToDelete!!)
                                 userToDelete = null
                             },
                             onDismiss = { userToDelete = null }

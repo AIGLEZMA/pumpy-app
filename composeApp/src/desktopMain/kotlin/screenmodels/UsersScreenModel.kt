@@ -21,6 +21,14 @@ class UsersScreenModel : ScreenModel {
         loadUsers()
     }
 
+    fun deleteUser(user: User) {
+        screenModelScope.launch {
+            val userDao = DatabaseProvider.getDatabase().userDao()
+            userDao.delete(user)
+            users = users.filter { it != user }
+        }
+    }
+
     private fun loadUsers() {
         screenModelScope.launch {
             isLoading = true
