@@ -148,6 +148,7 @@ class UsersScreen : Screen {
                             items(filteredUsers) { user ->
                                 val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
                                 ListItem(
+                                    overlineContent = { Text("Vous") }, // TODO: check if it's the logged in user
                                     headlineContent = { Text(text = user.username) },
                                     supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
                                     leadingContent = {
@@ -190,6 +191,7 @@ class UsersScreen : Screen {
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 HorizontalDivider()
+                                // Scroll in Material3 + Desktop
                             }
                         }
                     }
