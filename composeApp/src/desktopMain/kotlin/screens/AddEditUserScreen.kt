@@ -19,6 +19,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import screenmodels.AddEditUserScreenModel
 
+// TODO: use User object instead of user id
 class AddEditUserScreen(private val userId: Long? = null) : Screen {
 
     @Composable
