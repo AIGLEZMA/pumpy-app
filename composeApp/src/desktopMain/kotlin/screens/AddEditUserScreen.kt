@@ -17,15 +17,15 @@ import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import models.User
 import screenmodels.AddEditUserScreenModel
 
-// TODO: use User object instead of user id
-class AddEditUserScreen(private val userId: Long? = null) : Screen {
+class AddEditUserScreen(private val user: User? = null) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = navigator.rememberNavigatorScreenModel { AddEditUserScreenModel(userId) }
+        val screenModel = navigator.rememberNavigatorScreenModel { AddEditUserScreenModel(user) }
 
         val userState = screenModel.userState
         var username by remember { mutableStateOf(userState.username) }

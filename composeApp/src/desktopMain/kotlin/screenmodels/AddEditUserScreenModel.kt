@@ -11,23 +11,14 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
 import models.User
 
-// TODO: use the User object instead of the ID
-class AddEditUserScreenModel(private val userId: Long? = null) : ScreenModel {
+class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
     var userState by mutableStateOf(UserState())
         private set
 
     init {
-        if (userId != null) {
-            loadUser(userId)
-        }
-    }
-
-    private fun loadUser(id: Long) {
-        screenModelScope.launch {
-            val userDao = DatabaseProvider.getDatabase().userDao()
-            val user = userDao.getUserById(id)
+        if (user != null) {
             userState = userState.copy(
-                username = user!!.username,
+                username = user.username,
                 password = "",
                 isEditMode = true
             )
@@ -38,9 +29,12 @@ class AddEditUserScreenModel(private val userId: Long? = null) : ScreenModel {
         screenModelScope.launch {
             val userDao = DatabaseProvider.getDatabase().userDao()
             if (userState.isEditMode) {
-                val user = userDao.getUserById(userId!!)
-                userDao.update(user!!.copy(username = username, password = Password.hash(password)))
-                Logger.debug("Update user (id: $userId) (username: $username)")
+                if (user == null) {
+                    Logger.debug("Attempted to save user but the user instance is null ($username)")
+                    return@launch
+                }
+                userDao.update(user.copy(username = username, password = Password.hash(password)))
+                Logger.debug("Update user (username: $username)")
             } else {
                 val newUser = User(username = username, password = Password.hash(password))
                 userDao.insert(newUser)

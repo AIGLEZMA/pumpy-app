@@ -32,6 +32,15 @@ class LoginScreenModel : ScreenModel {
         }
     }
 
+    fun logout() {
+        loginState = loginState.copy(
+            user = null,
+            isAuthenticated = false,
+            errorMessage = null,
+            isLoading = false
+        )
+    }
+
     data class LoginState(
         val user: User? = null,
         val isAuthenticated: Boolean = false,

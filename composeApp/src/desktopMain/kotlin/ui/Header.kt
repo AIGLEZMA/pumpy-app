@@ -1,5 +1,6 @@
 package ui
 
+import Logger
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -16,11 +17,10 @@ import androidx.compose.ui.unit.dp
 fun Header(
     query: String,
     onQueryChange: (String) -> Unit,
-    onSearch: (String) -> Unit,
     onLogout: () -> Unit,
     isDarkMode: Boolean,
     onToggleTheme: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
@@ -32,7 +32,6 @@ fun Header(
         SearchField(
             query = query,
             onQueryChange = onQueryChange,
-            onSearch = onSearch,
             modifier = Modifier.weight(1f)
                 .height(56.dp)
                 .padding(horizontal = 8.dp)
@@ -110,21 +109,19 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
 fun SearchField(
     query: String,
     onQueryChange: (String) -> Unit,
-    onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SearchBar(
         modifier = modifier,
         placeholder = { Text("Rechercher...") },
         onSearch = {
-            onSearch(query)
-            println("On search called for $query")
+            Logger.debug("On search called for $query")
         },
         query = query,
         active = false,
         onActiveChange = { },
         onQueryChange = {
-            println("Query changed from $query to $it")
+            Logger.debug("Query changed from $query to $it")
             onQueryChange(it)
         },
         leadingIcon = { Icon(Icons.Default.Search, "Search") },
