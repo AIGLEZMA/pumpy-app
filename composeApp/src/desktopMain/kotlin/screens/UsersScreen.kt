@@ -1,10 +1,13 @@
 package screens
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,11 +18,8 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +33,8 @@ import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import models.User
+import screenmodels.LoginScreenModel
 import screenmodels.UsersScreenModel
 import ui.Header
 
@@ -43,16 +45,33 @@ class UsersScreen : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = navigator.rememberNavigatorScreenModel { UsersScreenModel() }
+        val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var query by rememberSaveable { mutableStateOf("") }
         var isDarkMode by rememberSaveable { mutableStateOf(false) }
 
-        val allUsers = screenModel.users
+        val loginState = loginScreenModel.loginState
+        //val allUsers = screenModel.users
+        // Dummy data for testing
+        val allUsers = remember {
+            mutableStateListOf(
+                User(1, "John Doe", "", true),
+                User(2, "Jane Doe", "", false),
+                User(3, "Adam Cena", "", true),
+                User(4, "Mohammed Ali", "", false),
+                User(5, "Jesus Biden", "", true),
+                User(6, "Jesus Biden", "", false),
+                User(7, "Alma Hose", "", false),
+                User(8, "Sara Trump", "", false),
+                User(9, "Ali Amine", "", false),
+                User(10, "Cristiano Messi", "", false),
+                User(11, "Lionel Ronaldo", "", false)
+            )
+        }
         val filteredUsers = allUsers.filter { user -> user.username.contains(query, ignoreCase = true) }
-        var isLoading = screenModel.isLoading
+        val sortedUsers = filteredUsers.sortedWith(compareBy({ it.id != loginState.user?.id }, { it.username }))
 
-//        val allItems = listOf("Apple", "Banana", "Cherry", "Date", "Fig", "Grape")
-//        val filteredItems = allItems.filter { it.contains(query, ignoreCase = true) }
+        var isLoading = screenModel.isLoading
 
         PermanentNavigationDrawer(
             drawerContent = {
@@ -72,9 +91,9 @@ class UsersScreen : Screen {
                         )
                         Spacer(Modifier.height(24.dp))
                         NavigationDrawerItem(
-                            icon = { Icon(Icons.Outlined.Description, contentDescription = "Home") },
+                            icon = { Icon(Icons.Outlined.Description, contentDescription = "Reports") },
                             badge = { Icon(Icons.Default.Add, contentDescription = "Add") },
-                            label = { Text("Accueil") },
+                            label = { Text("Rapports") },
                             selected = false,
                             onClick = { },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -137,63 +156,92 @@ class UsersScreen : Screen {
                             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
 
                     ) {
-                        Text(
-                            text = "Utilisateurs (1)",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 30.dp, start = 16.dp)
-                        )
-                        Spacer(Modifier.height(20.dp))
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(filteredUsers) { user ->
-                                val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
-                                ListItem(
-                                    overlineContent = { Text("Vous") }, // TODO: check if it's the logged in user
-                                    headlineContent = { Text(text = user.username) },
-                                    supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
-                                    leadingContent = {
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    MaterialTheme.colorScheme.primary
-                                                )
-                                        ) {
-                                            Text(
-                                                text = firstLetter,
-                                                color = Color.White,
-                                                textAlign = TextAlign.Center,
-                                                fontSize = 24.sp,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    },
-                                    trailingContent = {
-                                        Row {
-                                            IconButton(onClick = { }) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Edit,
-                                                    contentDescription = "Edit",
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            IconButton(onClick = { }) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete",
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                HorizontalDivider()
-                                // Scroll in Material3 + Desktop
-                            }
+                        Row(
+                            modifier = Modifier.padding(top = 30.dp, start = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Utilisateurs",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            Text(
+                                text = "(${sortedUsers.size})",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
+                        Spacer(Modifier.height(20.dp))
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            val state = rememberLazyListState()
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                state = state
+                            ) {
+                                items(sortedUsers) { user ->
+                                    val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
+                                    ListItem(
+                                        modifier = Modifier.height(56.dp).fillMaxWidth(),
+                                        overlineContent = {
+                                            if (loginState.user != null && user.id == loginState.user.id) Text(
+                                                text = "Vous", fontSize = 12.sp
+                                            )
+                                        },
+                                        headlineContent = { Text(text = user.username, fontSize = 14.sp) },
+                                        supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
+                                        leadingContent = {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        MaterialTheme.colorScheme.primary
+                                                    )
+                                            ) {
+                                                Text(
+                                                    text = firstLetter,
+                                                    color = Color.White,
+                                                    textAlign = TextAlign.Center,
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                        },
+                                        trailingContent = {
+                                            Row {
+                                                IconButton(onClick = { }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Edit,
+                                                        contentDescription = "Edit",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                                IconButton(onClick = { }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Delete",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                                    // Scroll in Material3 + Desktop
+                                }
+                            }
+                            VerticalScrollbar(
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                                adapter = rememberScrollbarAdapter(
+                                    scrollState = state
+                                )
+                            )
+                        }
+
                     }
                 }
 
