@@ -8,7 +8,6 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,10 +33,10 @@ fun Header(
             query = query,
             onQueryChange = onQueryChange,
             onSearch = onSearch,
-            modifier = Modifier
-                .weight(1f)
+            modifier = Modifier.weight(1f)
                 .height(56.dp)
                 .padding(horizontal = 8.dp)
+
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -50,7 +49,7 @@ fun Header(
     }
 }
 
-private val iconSize = 30.dp
+private val iconSize = 26.dp
 
 @Composable
 fun AccountMenu(onLogout: () -> Unit) {
@@ -114,8 +113,6 @@ fun SearchField(
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var active by rememberSaveable { mutableStateOf(false) }
-
     SearchBar(
         modifier = modifier,
         placeholder = { Text("Rechercher...") },
@@ -125,10 +122,7 @@ fun SearchField(
         },
         query = query,
         active = false,
-        onActiveChange = {
-            active = false
-            println("On active change to $active")
-        },
+        onActiveChange = { },
         onQueryChange = {
             println("Query changed from $query to $it")
             onQueryChange(it)
