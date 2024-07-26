@@ -1,10 +1,9 @@
 package ui
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
@@ -51,6 +50,8 @@ fun Header(
     }
 }
 
+private val iconSize = 30.dp
+
 @Composable
 fun AccountMenu(onLogout: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
@@ -61,7 +62,7 @@ fun AccountMenu(onLogout: () -> Unit) {
                 Icons.Outlined.AccountCircle,
                 contentDescription = "Account",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(iconSize)
             )
         }
         DropdownMenu(
@@ -88,7 +89,7 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
                 Icons.Outlined.Settings,
                 contentDescription = "Settings",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(iconSize)
             )
         }
         DropdownMenu(
@@ -105,37 +106,41 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
     }
 }
 
-@Preview
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TestHeaderScreen() {
-    var query by rememberSaveable { mutableStateOf("") }
-    val allItems = listOf("Apple", "Banana", "Cherry", "Date", "Fig", "Grape")
-    val filteredItems = allItems.filter { it.contains(query, ignoreCase = true) }
-    var isDarkMode by rememberSaveable { mutableStateOf(false) }
+fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var active by rememberSaveable { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Header(
-            query = query,
-            onQueryChange = { newQuery ->
-                query = newQuery
-                println("Query changed to $newQuery")
-            },
-            onSearch = { searchQuery ->
-                println("Search executed with query: $searchQuery")
-            },
-            onLogout = { println("Logged out") },
-            isDarkMode = isDarkMode,
-            onToggleTheme = {
-                isDarkMode = !isDarkMode
-                println("Theme toggled to ${if (isDarkMode) "Dark Mode" else "Light Mode"}")
-            },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-        )
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(filteredItems) { item ->
-                Text(item, modifier = Modifier.padding(8.dp))
-            }
+    SearchBar(
+        modifier = modifier,
+        placeholder = { Text("Rechercher...") },
+        onSearch = {
+            onSearch(query)
+            println("On search called for $query")
+        },
+        query = query,
+        active = false,
+        onActiveChange = {
+            active = false
+            println("On active change to $active")
+        },
+        onQueryChange = {
+            println("Query changed from $query to $it")
+            onQueryChange(it)
+        },
+        leadingIcon = { Icon(Icons.Default.Search, "Search") },
+        trailingIcon = {
+            IconButton(
+                onClick = { onQueryChange("") },
+                content = { Icon(Icons.Default.Close, "Close") }
+            )
         }
+    ) {
+
     }
 }

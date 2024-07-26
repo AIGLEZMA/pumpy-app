@@ -5,9 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.People
@@ -19,9 +22,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
@@ -43,7 +48,7 @@ class UsersScreen : Screen {
         var isDarkMode by rememberSaveable { mutableStateOf(false) }
 
         val allUsers = screenModel.users
-        var filteredUsers = allUsers.filter { user -> user.username.contains(query, ignoreCase = true) }
+        val filteredUsers = allUsers.filter { user -> user.username.contains(query, ignoreCase = true) }
         var isLoading = screenModel.isLoading
 
 //        val allItems = listOf("Apple", "Banana", "Cherry", "Date", "Fig", "Grape")
@@ -52,7 +57,7 @@ class UsersScreen : Screen {
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
-                    modifier = Modifier.width(250.dp)
+                    modifier = Modifier.width(260.dp)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -125,15 +130,66 @@ class UsersScreen : Screen {
                 }
             ) { paddingValues ->
                 Surface(modifier = Modifier.padding(paddingValues)) {
-                    Box(
-                        modifier = Modifier.padding(20.dp)
-                            .shadow(2.dp, RoundedCornerShape(24.dp))
-                            .background(Color.White, RoundedCornerShape(24.dp))
+                    Column(
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .shadow(2.dp, RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
 
                     ) {
+                        Text(
+                            text = "Utilisateurs (1)",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 30.dp, start = 16.dp)
+                        )
+                        Spacer(Modifier.height(20.dp))
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(filteredUsers) { user ->
-                                Text(text = user.username)
+                                val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
+                                ListItem(
+                                    headlineContent = { Text(text = user.username) },
+                                    supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
+                                    leadingContent = {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary
+                                                )
+                                        ) {
+                                            Text(
+                                                text = firstLetter,
+                                                color = Color.White,
+                                                textAlign = TextAlign.Center,
+                                                fontSize = 24.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    },
+                                    trailingContent = {
+                                        Row {
+                                            IconButton(onClick = { }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Edit,
+                                                    contentDescription = "Edit",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            IconButton(onClick = { }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = "Delete",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                HorizontalDivider()
                             }
                         }
                     }
