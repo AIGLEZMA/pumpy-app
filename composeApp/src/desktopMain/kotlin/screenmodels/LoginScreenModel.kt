@@ -1,6 +1,7 @@
 package screenmodels
 
 import DatabaseProvider
+import Logger
 import Password
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,13 @@ class LoginScreenModel : ScreenModel {
             val userDao = DatabaseProvider.getDatabase().userDao()
             val user = userDao.getUserByUsername(username)
             loginState = if (user != null) {
+                Logger.debug(
+                    "Registered password hash: ${user.password}, provided password: $password with hash: ${
+                        Password.hash(
+                            password
+                        )
+                    }"
+                )
                 if (Password.verify(password, user.password)) {
                     LoginState(user = user, isAuthenticated = true)
                 } else {

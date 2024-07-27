@@ -3,7 +3,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import at.favre.lib.crypto.bcrypt.BCrypt
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -32,11 +31,11 @@ object DatabaseProvider {
                     override fun onCreate(connection: SQLiteConnection) {
                         super.onCreate(connection)
                         val adminPassword = System.getenv("ADMIN_PASSWORD") ?: "admin"
-                        val hashedPassword = BCrypt.withDefaults().hashToString(12, adminPassword.toCharArray())
+                        val hashedPassword = Password.hash(adminPassword)
                         GlobalScope.launch(Dispatchers.IO) {
                             instance?.userDao()
                                 ?.insert(User(username = "admin", password = hashedPassword, isAdmin = true))
-                            Logger.debug("DatabaseCallback: Admin user inserted with password: $adminPassword")
+                            Logger.debug("DatabaseCallback: Admin user inserted with password: $adminPassword, hash: $hashedPassword")
                         }
                     }
                 })

@@ -5,7 +5,7 @@ import androidx.room.*
 @Entity(tableName = "client")
 data class Client(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val username: String
+    val name: String
 )
 
 @Dao
@@ -18,9 +18,6 @@ interface ClientDao {
 
     @Update
     suspend fun update(client: Client)
-
-    @Query("SELECT * FROM client WHERE username = :username")
-    suspend fun getClientByUsername(username: String): Client?
 
     @Query("SELECT * FROM client WHERE id= :id")
     suspend fun getClientById(id: Long): Client?

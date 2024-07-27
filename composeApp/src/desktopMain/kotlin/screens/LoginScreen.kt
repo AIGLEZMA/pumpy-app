@@ -10,7 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.nativeKeyCode
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -32,6 +38,11 @@ class LoginScreen : Screen {
         var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
+
+        // FocusRequesters for each field and button
+        val usernameFocusRequester = remember { FocusRequester() }
+        val passwordFocusRequester = remember { FocusRequester() }
+        val loginButtonFocusRequester = remember { FocusRequester() }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -55,7 +66,10 @@ class LoginScreen : Screen {
                     onValueChange = { username = it },
                     label = { Text("Nom") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(0.21f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.21f)
+                        .focusRequester(usernameFocusRequester)
+                        .focusProperties { next = passwordFocusRequester }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -73,14 +87,27 @@ class LoginScreen : Screen {
                             Icon(imageVector = image, contentDescription = description)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(0.21f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.21f)
+                        .focusRequester(passwordFocusRequester)
+                        .focusProperties { next = loginButtonFocusRequester }
+                        .onKeyEvent { keyEvent ->
+                            if (keyEvent.key.nativeKeyCode == 13) { // 13 is the native key code for ENTER
+                                screenModel.login(username, password)
+                                true
+                            } else {
+                                false
+                            }
+                        }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = { screenModel.login(username, password) },
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
-                    modifier = Modifier.fillMaxWidth(0.21f)
+                    modifier = Modifier
+                        .fillMaxWidth(0.21f)
+                        .focusRequester(loginButtonFocusRequester)
                 ) {
                     Text(text = "Connexion", color = Color.White)
                 }

@@ -79,7 +79,10 @@ class UsersScreen : Screen {
             onUsersClick = {},
             query = searchQuery,
             onQueryChange = { searchQuery = it },
-            onLogout = { loginScreenModel.logout() },
+            onLogout = {
+                loginScreenModel.logout()
+                navigator.popUntilRoot()
+            },
             isDarkMode = isDarkMode, // TODO
             onToggleTheme = {}, // TODO
             onFabClick = { navigator.push(AddEditUserScreen()) }
