@@ -48,14 +48,14 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (userState.isEditMode) "Editer l'utilisateur" else "Créer un nouveau utilisateur",
+                    text = if (userState.isEditMode) "Editer l'utilisateur" else "Ajouter un nouveau utilisateur",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Nom") },
+                    label = { Text("Nom d'utilisateur") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(0.21f)
                 )

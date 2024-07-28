@@ -64,7 +64,7 @@ class LoginScreen : Screen {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Nom") },
+                    label = { Text("Nom d'utilisateur") },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth(0.21f)
