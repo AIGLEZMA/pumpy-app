@@ -28,6 +28,12 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
     fun saveUser(username: String, password: String) {
         screenModelScope.launch {
             val userDao = DatabaseProvider.getDatabase().userDao()
+            if (username.isEmpty() || password.isEmpty()) {
+                userState = userState.copy(
+                    errorMessage = "Veuillez préciser un nom d'utilisateur et un mot de passe"
+                )
+                return@launch
+            }
             if (userState.isEditMode) {
                 if (user == null) {
                     Logger.debug("Attempted to save user but the user instance is null ($username)")
@@ -47,6 +53,7 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
     data class UserState(
         val username: String = "",
         val password: String = "",
+        val errorMessage: String? = null,
         val isEditMode: Boolean = false,
         val isSaved: Boolean = false
     )

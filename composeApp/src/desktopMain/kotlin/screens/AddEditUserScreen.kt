@@ -1,5 +1,6 @@
 package screens
 
+import Logger
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -13,7 +14,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -25,7 +26,7 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = navigator.rememberNavigatorScreenModel { AddEditUserScreenModel(user) }
+        val screenModel = rememberScreenModel { AddEditUserScreenModel(user) }
 
         val userState = screenModel.userState
         var username by remember { mutableStateOf(userState.username) }
@@ -42,11 +43,14 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Magrinov",
+                    text = "MAGRINOV",
                     style = MaterialTheme.typography.headlineLarge
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(if (userState.isEditMode) "Editer l'utilisateur" else "Créer un nouveau utilisateur")
+                Text(
+                    text = if (userState.isEditMode) "Editer l'utilisateur" else "Créer un nouveau utilisateur",
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = username,
@@ -85,11 +89,23 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                 ) {
                     Text(text = "Annuler")
                 }
-                if (userState.isSaved) {
-                    LaunchedEffect(Unit) {
-                        navigator.pop()
+                when {
+                    userState.isSaved -> {
+                        LaunchedEffect(Unit) {
+                            navigator.pop()
+                            Logger.debug("User (username: ${userState.username}) edited.")
+                        }
+                    }
+
+                    userState.errorMessage != null -> {
+                        Text(userState.errorMessage, color = MaterialTheme.colorScheme.error)
                     }
                 }
+//                if (userState.isSaved) {
+//                    LaunchedEffect(Unit) {
+//                        navigator.pop()
+//                    }
+//                }
             }
         }
     }
