@@ -95,7 +95,7 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { screenModel.saveClient(name) },
+                    onClick = { screenModel.saveClient(name, phoneNumber, location) },
                     modifier = Modifier.fillMaxWidth(0.21f)
                 ) {
                     Text(text = "Enregister")
