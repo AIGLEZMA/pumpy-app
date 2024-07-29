@@ -5,7 +5,9 @@ import androidx.room.*
 @Entity(tableName = "client")
 data class Client(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String
+    val name: String,
+    val phoneNumber: String,
+    val location: String
 )
 
 @Dao
