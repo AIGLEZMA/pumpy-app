@@ -7,13 +7,16 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import models.User
-import models.UserDao
+import models.*
 import java.nio.file.Paths
 
-@Database(entities = [User::class], version = 3)
+@Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
+    abstract fun clientDao(): ClientDao
+    abstract fun farmDao(): FarmDao
+    abstract fun pumpDao(): PumpDao
+    abstract fun reportDao(): ReportDao
 }
 
 object DatabaseProvider {
