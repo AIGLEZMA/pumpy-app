@@ -2,7 +2,6 @@ package models
 
 import androidx.room.*
 import java.time.LocalDate
-import java.util.*
 
 @Entity(
     tableName = "report",

@@ -1,8 +1,6 @@
 package screenmodels
 
 import DatabaseProvider
-import Logger
-import Password
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,69 +8,82 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
 import models.Report
-import models.Report.OperationType
-import models.User
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.*
 
 class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel {
-    var reportState by mutableStateOf(ReportState())
+    var state by mutableStateOf(ReportState())
         private set
 
-    init {
-        if (report != null) {
-            reportState = reportState.copy(
+    var executionOrder by mutableStateOf(report?.executionOrder)
+    var requestDate by mutableStateOf(report?.requestDate)
+    var workFinishDate by mutableStateOf(report?.workFinishDate)
+    var pumpOwnerId by mutableStateOf(report?.pumpOwnerId)
+    var operators by mutableStateOf(report?.operators)
+    var type by mutableStateOf(report?.type)
+    var depth by mutableStateOf(report?.depth)
+    var staticLevel by mutableStateOf(report?.staticLevel)
+    var dynamicLevel by mutableStateOf(report?.dynamicLevel)
+    var pumpShimming by mutableStateOf(report?.pumpShimming)
+    var speed by mutableStateOf(report?.speed)
+    var engine by mutableStateOf(report?.engine)
+    var pump by mutableStateOf(report?.pump)
+    var elements by mutableStateOf(report?.elements)
+    var notes by mutableStateOf(report?.notes)
+    var quotation by mutableStateOf(report?.quotation)
+    var invoice by mutableStateOf(report?.invoice)
 
-            )
+    init {
+        report?.let {
+            state = state.copy(isEditMode = true)
         }
     }
 
     fun saveReport() {
         screenModelScope.launch {
-            val reportDao = DatabaseProvider.getDatabase().userDao()
-            if (username.isEmpty() || password.isEmpty()) {
-                userState = userState.copy(
-                    errorMessage = "Veuillez préciser un nom d'utilisateur et un mot de passe"
+            val reportDao = DatabaseProvider.getDatabase().reportDao()
+
+            if (executionOrder == null || requestDate == null || workFinishDate == null
+                || pumpOwnerId == null || operators == null || type == null
+                || quotation == null || invoice == null
+            ) {
+                state = state.copy(
+                    errorMessage = "All required fields must be filled in"
                 )
                 return@launch
             }
-            if (userState.isEditMode) {
-                if (user == null) {
-                    Logger.debug("Attempted to save user but the user instance is null ($username)")
-                    return@launch
-                }
-                userDao.update(user.copy(username = username, password = Password.hash(password)))
-                Logger.debug("Update user (username: $username)")
+
+            val newReport = Report(
+                executionOrder = executionOrder!!.toLong(),
+                requestDate = requestDate!!,
+                workFinishDate = workFinishDate!!,
+                pumpOwnerId = pumpOwnerId!!,
+                operators = operators!!,
+                type = type!!,
+                depth = depth,
+                staticLevel = staticLevel,
+                dynamicLevel = dynamicLevel,
+                pumpShimming = pumpShimming,
+                speed = speed,
+                engine = engine,
+                pump = pump,
+                elements = elements,
+                notes = notes,
+                quotation = quotation!!,
+                invoice = invoice!!
+            )
+
+            if (state.isEditMode && report != null) {
+                reportDao.update(newReport.copy(reportId = report.reportId))
             } else {
-                val newUser = User(username = username, password = Password.hash(password))
-                userDao.insert(newUser)
-                Logger.debug("Inserting new user (username: $username)")
+                reportDao.insert(newReport)
             }
-            userState = userState.copy(isSaved = true)
+
+            state = state.copy(isSaved = true)
         }
     }
 
     data class ReportState(
-        val executionOrder: Long = 0L,
-        val requestDate: LocalDate = LocalDate.now(),
-        val workFinishDate: LocalDate = LocalDate.now().plusDays(1),
-        val pumpOwnerId: Long = 0L,
-        val operators: List<String> = emptyList(),
-        val type: OperationType,
-        val depth: Long?,
-        val staticLevel: Long?,
-        val dynamicLevel: Long?,
-        val pumpShimming: Long?,
-        val speed: Float?,
-        val engine: String?,
-        val pump: String?,
-        val elements: String?,
-        val notes: String?,
-        val quotation: Long,
-        val invoice: Long,
         val errorMessage: String? = null,
         val isEditMode: Boolean = false,
         val isSaved: Boolean = false
     )
+}

@@ -1,6 +1,7 @@
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -11,6 +12,7 @@ import models.*
 import java.nio.file.Paths
 
 @Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 3)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun clientDao(): ClientDao

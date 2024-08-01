@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "8a975b5e5132c27a81b570a8eb6284e4",
+    "identityHash": "c3044943912348ab47d7bdb7d33f09dd",
     "entities": [
       {
         "tableName": "user",
@@ -39,11 +39,257 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "client",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `location` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "clientId",
+            "columnName": "clientId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phoneNumber",
+            "columnName": "phoneNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "location",
+            "columnName": "location",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "clientId"
+          ]
+        }
+      },
+      {
+        "tableName": "farm",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`farmId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `clientOwnerId` INTEGER NOT NULL, FOREIGN KEY(`clientOwnerId`) REFERENCES `client`(`clientId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "farmId",
+            "columnName": "farmId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clientOwnerId",
+            "columnName": "clientOwnerId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "farmId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "client",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "clientOwnerId"
+            ],
+            "referencedColumns": [
+              "clientId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "pump",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pumpId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `farmOwnerId` INTEGER NOT NULL, FOREIGN KEY(`farmOwnerId`) REFERENCES `farm`(`farmId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "pumpId",
+            "columnName": "pumpId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "farmOwnerId",
+            "columnName": "farmOwnerId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "pumpId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "farm",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "farmOwnerId"
+            ],
+            "referencedColumns": [
+              "farmId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "report",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reportId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `executionOrder` INTEGER NOT NULL, `requestDate` TEXT NOT NULL, `workFinishDate` TEXT NOT NULL, `pumpOwnerId` INTEGER NOT NULL, `operators` TEXT NOT NULL, `type` TEXT NOT NULL, `depth` INTEGER, `staticLevel` INTEGER, `dynamicLevel` INTEGER, `pumpShimming` INTEGER, `speed` REAL, `engine` TEXT, `pump` TEXT, `elements` TEXT, `notes` TEXT, `quotation` INTEGER NOT NULL, `invoice` INTEGER NOT NULL, FOREIGN KEY(`pumpOwnerId`) REFERENCES `pump`(`pumpId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "reportId",
+            "columnName": "reportId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "executionOrder",
+            "columnName": "executionOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requestDate",
+            "columnName": "requestDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workFinishDate",
+            "columnName": "workFinishDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pumpOwnerId",
+            "columnName": "pumpOwnerId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operators",
+            "columnName": "operators",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "depth",
+            "columnName": "depth",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "staticLevel",
+            "columnName": "staticLevel",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dynamicLevel",
+            "columnName": "dynamicLevel",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pumpShimming",
+            "columnName": "pumpShimming",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "speed",
+            "columnName": "speed",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "engine",
+            "columnName": "engine",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pump",
+            "columnName": "pump",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "elements",
+            "columnName": "elements",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "quotation",
+            "columnName": "quotation",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "invoice",
+            "columnName": "invoice",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "reportId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "pump",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "pumpOwnerId"
+            ],
+            "referencedColumns": [
+              "pumpId"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a975b5e5132c27a81b570a8eb6284e4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c3044943912348ab47d7bdb7d33f09dd')"
     ]
   }
 }
