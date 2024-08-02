@@ -7,10 +7,17 @@ import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
+import models.Client
+import models.Farm
 import models.Report
+import models.User
 
 class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel {
     var state by mutableStateOf(ReportState())
+        private set
+    var clients by mutableStateOf<List<Client>>(emptyList())
+        private set
+    var farms by mutableStateOf<List<Farm>>(emptyList())
         private set
 
     var executionOrder by mutableStateOf(report?.executionOrder)
@@ -34,6 +41,16 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
     init {
         report?.let {
             state = state.copy(isEditMode = true)
+        }
+        loadClients()
+    }
+
+    private fun loadClients() {
+        screenModelScope.launch {
+            state = state.copy(isLoading = true)
+            val clientDao = DatabaseProvider.getDatabase().clientDao()
+            clients = clientDao.getAllClients()
+            state = state.copy(isLoading = true)
         }
     }
 
@@ -83,6 +100,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
 
     data class ReportState(
         val errorMessage: String? = null,
+        val isLoading: Boolean = false,
         val isEditMode: Boolean = false,
         val isSaved: Boolean = false
     )

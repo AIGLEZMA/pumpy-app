@@ -56,7 +56,7 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
                     modifier = Modifier.fillMaxWidth(0.21f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
+                OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = {
                         if (it.length <= 10 && it.all { char -> char.isDigit() }) {
@@ -64,7 +64,7 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
                             phoneNumberError = if (it.isEmpty() || it.startsWith("0")) {
                                 null
                             } else {
-                                "Phone number must start with 0"
+                                "Le numéro de téléphone doit commencer par 0"
                             }
                         } else if (it.isEmpty()) {
                             phoneNumber = it

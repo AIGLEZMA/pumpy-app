@@ -30,7 +30,7 @@ class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel
             val clientDao = DatabaseProvider.getDatabase().clientDao()
             if (name.isEmpty() || phoneNumber.isEmpty() || location.isEmpty()) {
                 clientState = clientState.copy(
-                    errorMessage = "Veuillez &préciser le nom, le numéro de téléphone et la localisation du client"
+                    errorMessage = "Veuillez préciser le nom, le numéro de téléphone et la localisation du client"
                 )
                 return@launch
             }

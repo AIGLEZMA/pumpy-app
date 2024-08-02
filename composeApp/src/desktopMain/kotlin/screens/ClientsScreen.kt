@@ -1,6 +1,5 @@
 package screens
 
-import Logger
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -27,39 +26,38 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import models.User
+import models.Client
+import screenmodels.ClientsScreenModel
 import screenmodels.LoginScreenModel
-import screenmodels.UsersScreenModel
 import ui.AccountIcon
 import ui.DeleteConfirmationDialog
 import ui.Layout
 import ui.Loading
 
-class UsersScreen : Screen {
+class ClientsScreen : Screen {
 
     @Preview
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { UsersScreenModel() }
+        val screenModel = rememberScreenModel { ClientsScreenModel() }
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var isDarkMode by rememberSaveable { mutableStateOf(false) }
-        var userToDelete by remember { mutableStateOf<User?>(null) }
+        var clientToDelete by remember { mutableStateOf<Client?>(null) }
 
         val loginState = loginScreenModel.loginState
-        val allUsers = screenModel.users
-        val filteredUsers = allUsers.filter { user -> user.username.contains(searchQuery, ignoreCase = true) }
-        val sortedUsers = filteredUsers.sortedWith(compareBy({ it.id != loginState.user?.id }, { it.username }))
+        val allClients = screenModel.clients
+        val filteredClients = allClients.filter { client -> client.name.contains(searchQuery, ignoreCase = true) }
 
         val isLoading = screenModel.isLoading
 
         Layout(
-            selected = "users",
+            selected = "clients",
             onReportsClick = { navigator.push(LoginScreen()) },
-            onClientsClick = { navigator.push(ClientsScreen()) },
-            onUsersClick = {},
+            onClientsClick = {},
+            onUsersClick = { navigator.push(UsersScreen()) },
             query = searchQuery,
             onQueryChange = { searchQuery = it },
             onLogout = {
@@ -68,7 +66,7 @@ class UsersScreen : Screen {
             },
             isDarkMode = isDarkMode, // TODO
             onToggleTheme = {}, // TODO
-            onFabClick = { navigator.push(AddEditUserScreen()) }
+            onFabClick = { navigator.push(AddEditClientScreen()) }
         ) {
             if (isLoading) {
                 Loading()
@@ -80,21 +78,19 @@ class UsersScreen : Screen {
                         .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
 
                 ) {
-                    Title(sortedUsers = sortedUsers)
+                    Title(clients = allClients)
                     Spacer(Modifier.height(20.dp))
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         val state = rememberLazyListState()
-                        UsersList(
+                        ClientsList(
                             state = state,
-                            loggedInUser = loginState.user,
-                            sortedUsers = sortedUsers,
-                            onUserEditClick = {
-                                Logger.debug("Moving from Users screen into Edit User screen")
-                                navigator.push(AddEditUserScreen(it))
+                            clients = filteredClients,
+                            onClientEditClick = {
+                                navigator.push(AddEditClientScreen(it))
                             }, // TODO: permissions
-                            onUserDeleteClick = { userToDelete = it } // TODO: permissions
+                            onClientDeleteClick = { clientToDelete = it } // TODO: permissions
                         )
                         VerticalScrollbar(
                             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
@@ -103,15 +99,15 @@ class UsersScreen : Screen {
                             )
                         )
                     }
-                    userToDelete?.let { user ->
+                    clientToDelete?.let { client ->
                         DeleteConfirmationDialog(
-                            title = "Supprimer l'utilisateur",
-                            message = "Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.username}",
+                            title = "Supprimer le client",
+                            message = "Êtes-vous sûr de vouloir supprimer le client ${client.name}",
                             onConfirm = {
-                                screenModel.deleteUser(userToDelete!!)
-                                userToDelete = null
+                                screenModel.deleteClient(client!!)
+                                clientToDelete = null
                             },
-                            onDismiss = { userToDelete = null }
+                            onDismiss = { clientToDelete = null }
                         )
                     }
                 }
@@ -121,7 +117,7 @@ class UsersScreen : Screen {
 
     @Composable
     fun Title(
-        sortedUsers: List<User>,
+        clients: List<Client>,
         modifier: Modifier = Modifier
     ) {
         Row(
@@ -129,13 +125,13 @@ class UsersScreen : Screen {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Utilisateurs",
+                text = "Clients",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier.width(5.dp))
             Text(
-                text = "(${sortedUsers.size})",
+                text = "(${clients.size})",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -143,42 +139,36 @@ class UsersScreen : Screen {
     }
 
     @Composable
-    fun UsersList(
+    fun ClientsList(
         state: LazyListState,
-        loggedInUser: User?,
-        sortedUsers: List<User>,
-        onUserEditClick: (User) -> Unit,
-        onUserDeleteClick: (User) -> Unit,
+        clients: List<Client>,
+        onClientEditClick: (Client) -> Unit,
+        onClientDeleteClick: (Client) -> Unit,
         modifier: Modifier = Modifier
     ) {
         LazyColumn(
             state = state,
             modifier = modifier.fillMaxSize()
         ) {
-            items(sortedUsers) { user ->
-                val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
+            items(clients) { client ->
+                val firstLetter = client.name.firstOrNull()?.uppercase() ?: "?"
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
-                    overlineContent = {
-                        if (loggedInUser != null && user.id == loggedInUser.id) Text(
-                            text = "Vous", fontSize = 12.sp
-                        )
-                    },
-                    headlineContent = { Text(text = user.username, fontSize = 14.sp) },
-                    supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
+                    headlineContent = { Text(text = client.name, fontSize = 14.sp) },
+                    supportingContent = { Text(client.phoneNumber) },
                     leadingContent = {
                         AccountIcon(firstLetter)
                     },
                     trailingContent = {
                         Row {
-                            IconButton(onClick = { onUserEditClick(user) }) {
+                            IconButton(onClick = { onClientEditClick(client) }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "Edit",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = { onUserDeleteClick(user) }) {
+                            IconButton(onClick = { onClientDeleteClick(client) }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Delete",
