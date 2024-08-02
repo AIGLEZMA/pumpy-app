@@ -16,19 +16,13 @@ class LoginScreenModel : ScreenModel {
         private set
 
     fun login(username: String, password: String) {
+        Logger.debug("[Login] Logging in as $username")
         screenModelScope.launch {
             loginState = loginState.copy(isLoading = true)
 
             val userDao = DatabaseProvider.getDatabase().userDao()
             val user = userDao.getUserByUsername(username)
             loginState = if (user != null) {
-                Logger.debug(
-                    "Registered password hash: ${user.password}, provided password: $password with hash: ${
-                        Password.hash(
-                            password
-                        )
-                    }"
-                )
                 if (Password.verify(password, user.password)) {
                     LoginState(user = user, isAuthenticated = true)
                 } else {
@@ -37,6 +31,8 @@ class LoginScreenModel : ScreenModel {
             } else {
                 LoginState(errorMessage = "Utilisateur non trouvé")
             }
+        }.invokeOnCompletion {
+            Logger.debug("[Login] Logging in as $username : ${if (loginState.isAuthenticated) "SUCCESS" else "FAILURE (${loginState.errorMessage}"}")
         }
     }
 

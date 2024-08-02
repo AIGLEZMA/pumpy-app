@@ -16,6 +16,7 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
         private set
 
     init {
+        Logger.debug("[User] New ${if (user != null) "edit" else "add"} user screen model")
         if (user != null) {
             userState = userState.copy(
                 username = user.username,
@@ -36,15 +37,15 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
             }
             if (userState.isEditMode) {
                 if (user == null) {
-                    Logger.debug("Attempted to save user but the user instance is null ($username)")
+                    Logger.debug("[User] Attempted to save user but the user instance is null (username: $username)")
                     return@launch
                 }
                 userDao.update(user.copy(username = username, password = Password.hash(password)))
-                Logger.debug("Update user (username: $username)")
+                Logger.debug("[User] Updated user (username: $username)")
             } else {
                 val newUser = User(username = username, password = Password.hash(password))
                 userDao.insert(newUser)
-                Logger.debug("Inserting new user (username: $username)")
+                Logger.debug("[User] Adding new user (username: $username)")
             }
             userState = userState.copy(isSaved = true)
         }

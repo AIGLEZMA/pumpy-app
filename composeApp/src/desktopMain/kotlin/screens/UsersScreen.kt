@@ -1,6 +1,6 @@
 package screens
 
-import Logger
+import AccountIcon
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -30,7 +30,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import models.User
 import screenmodels.LoginScreenModel
 import screenmodels.UsersScreenModel
-import ui.AccountIcon
 import ui.DeleteConfirmationDialog
 import ui.Layout
 import ui.Loading
@@ -91,7 +90,6 @@ class UsersScreen : Screen {
                             loggedInUser = loginState.user,
                             sortedUsers = sortedUsers,
                             onUserEditClick = {
-                                Logger.debug("Moving from Users screen into Edit User screen")
                                 navigator.push(AddEditUserScreen(it))
                             }, // TODO: permissions
                             onUserDeleteClick = { userToDelete = it } // TODO: permissions

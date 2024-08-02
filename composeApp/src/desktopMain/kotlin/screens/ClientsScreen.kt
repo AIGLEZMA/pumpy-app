@@ -1,5 +1,6 @@
 package screens
 
+import AccountIcon
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -29,7 +30,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Client
 import screenmodels.ClientsScreenModel
 import screenmodels.LoginScreenModel
-import ui.AccountIcon
 import ui.DeleteConfirmationDialog
 import ui.Layout
 import ui.Loading

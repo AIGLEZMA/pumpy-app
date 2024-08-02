@@ -1,6 +1,5 @@
 package screens
 
-import Logger
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -93,7 +92,6 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                     userState.isSaved -> {
                         LaunchedEffect(Unit) {
                             navigator.pop()
-                            Logger.debug("User (username: ${userState.username}) edited.")
                         }
                     }
 
@@ -101,11 +99,6 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                         Text(userState.errorMessage, color = MaterialTheme.colorScheme.error)
                     }
                 }
-//                if (userState.isSaved) {
-//                    LaunchedEffect(Unit) {
-//                        navigator.pop()
-//                    }
-//                }
             }
         }
     }

@@ -15,6 +15,7 @@ class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel
         private set
 
     init {
+        Logger.debug("[Client] New ${if (client != null) "edit" else "add"} client screen model")
         if (client != null) {
             clientState = clientState.copy(
                 name = client.name,
@@ -36,15 +37,15 @@ class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel
             }
             if (clientState.isEditMode) {
                 if (client == null) {
-                    Logger.debug("Attempted to save client but the client instance is null ($name)")
+                    Logger.debug("[Client] Attempted to save client but the client instance is null (name: $name)")
                     return@launch
                 }
                 clientDao.update(client.copy(name = name, phoneNumber = phoneNumber, location = location))
-                Logger.debug("Update client (name: $name)")
+                Logger.debug("[Client] Updated client (name: $name)")
             } else {
                 val newClient = Client(name = name, phoneNumber = phoneNumber, location = location)
                 clientDao.insert(newClient)
-                Logger.debug("Inserting new client (name: $name)")
+                Logger.debug("[Client] Adding new client (name: $name)")
             }
             clientState = clientState.copy(isSaved = true)
         }

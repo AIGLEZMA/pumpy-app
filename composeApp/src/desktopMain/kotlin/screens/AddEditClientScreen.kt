@@ -111,7 +111,6 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
                     clientState.isSaved -> {
                         LaunchedEffect(Unit) {
                             navigator.pop()
-                            Logger.debug("Client (name: ${clientState.name}) edited.")
                         }
                     }
 

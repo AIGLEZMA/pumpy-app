@@ -28,7 +28,7 @@ object DatabaseProvider {
     fun getDatabase(): AppDatabase {
         return instance ?: synchronized(this) {
             val databasePath = Paths.get(System.getProperty("user.home"), "Magrinov/app_database.db").toString()
-            Logger.debug("DatabasePath: Database path: $databasePath")
+            Logger.debug("[Database] Database path: $databasePath")
             val newInstance = Room.databaseBuilder<AppDatabase>(
                 name = databasePath
             )
@@ -40,7 +40,7 @@ object DatabaseProvider {
                         GlobalScope.launch(Dispatchers.IO) {
                             instance?.userDao()
                                 ?.insert(User(username = "admin", password = hashedPassword, isAdmin = true))
-                            Logger.debug("DatabaseCallback: Admin user inserted with password: $adminPassword, hash: $hashedPassword")
+                            Logger.debug("[Database] Admin user inserted with password: $adminPassword, hash: $hashedPassword")
                         }
                     }
                 })

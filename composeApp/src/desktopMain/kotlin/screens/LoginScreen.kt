@@ -1,6 +1,5 @@
 package screens
 
-import Logger
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -121,7 +120,6 @@ class LoginScreen : Screen {
                         loginState.isAuthenticated -> {
                             LaunchedEffect(Unit) {
                                 navigator.push(UsersScreen())
-                                Logger.debug("User (username: ${loginState.user!!.username}) authenticated.")
                             }
                         }
 

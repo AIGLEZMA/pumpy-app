@@ -1,6 +1,7 @@
 package screenmodels
 
 import DatabaseProvider
+import Logger
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,19 +22,25 @@ class ClientsScreenModel : ScreenModel {
     }
 
     fun deleteClient(client: Client) {
+        Logger.debug("[Client] Deleting client (name: ${client.name})...")
         screenModelScope.launch {
             val clientDao = DatabaseProvider.getDatabase().clientDao()
             clientDao.delete(client)
             clients = clients.filter { it != client }
+        }.invokeOnCompletion {
+            Logger.debug("[Client] Deleting client (name: ${client.name}) DONE")
         }
     }
 
     private fun loadClients() {
+        Logger.debug("[Client] Loading clients...")
         screenModelScope.launch {
             isLoading = true
             val clientDao = DatabaseProvider.getDatabase().clientDao()
             clients = clientDao.getAllClients()
             isLoading = false
+        }.invokeOnCompletion {
+            Logger.debug("[Client] Loaded ${clients.size} client(s)")
         }
     }
 }
