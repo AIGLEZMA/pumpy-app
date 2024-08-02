@@ -32,7 +32,7 @@ class UsersScreenModel : ScreenModel {
         }
     }
 
-    private fun loadUsers() {
+    fun loadUsers() {
         Logger.debug("[User] Loading users...")
         screenModelScope.launch {
             isLoading = true

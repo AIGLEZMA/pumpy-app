@@ -32,7 +32,7 @@ class ClientsScreenModel : ScreenModel {
         }
     }
 
-    private fun loadClients() {
+    fun loadClients() {
         Logger.debug("[Client] Loading clients...")
         screenModelScope.launch {
             isLoading = true

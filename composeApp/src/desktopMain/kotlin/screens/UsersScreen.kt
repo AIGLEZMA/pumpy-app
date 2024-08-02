@@ -47,6 +47,10 @@ class UsersScreen : Screen {
         var isDarkMode by rememberSaveable { mutableStateOf(false) }
         var userToDelete by remember { mutableStateOf<User?>(null) }
 
+        LaunchedEffect(Unit) {
+            screenModel.loadUsers()
+        }
+
         val loginState = loginScreenModel.loginState
         val allUsers = screenModel.users
         val filteredUsers = allUsers.filter { user -> user.username.contains(searchQuery, ignoreCase = true) }

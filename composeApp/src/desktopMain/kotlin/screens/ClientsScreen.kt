@@ -47,6 +47,10 @@ class ClientsScreen : Screen {
         var isDarkMode by rememberSaveable { mutableStateOf(false) }
         var clientToDelete by remember { mutableStateOf<Client?>(null) }
 
+        LaunchedEffect(Unit) {
+            screenModel.loadClients()
+        }
+
         val loginState = loginScreenModel.loginState
         val allClients = screenModel.clients
         val filteredClients = allClients.filter { client -> client.name.contains(searchQuery, ignoreCase = true) }
@@ -68,6 +72,7 @@ class ClientsScreen : Screen {
             onToggleTheme = {}, // TODO
             onFabClick = { navigator.push(AddEditClientScreen()) }
         ) {
+            // TODO: no clients view
             if (isLoading) {
                 Loading()
             } else {
