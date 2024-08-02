@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import models.Client
 import models.Farm
 import models.Report
-import models.User
 
 class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel {
     var state by mutableStateOf(ReportState())

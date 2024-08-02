@@ -6,34 +6,24 @@ import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Client
-import models.Farm
-import models.Pump
 import models.Report
 import screenmodels.AddEditReportScreenModel
-import ui.AutoCompleteTextField
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import screens.report.GeneralForm
+
+val spaceBetweenFields = Modifier.height(8.dp)
 
 class AddEditReportScreen(private val report: Report? = null) : Screen {
-
-    val spaceBetweenFields = Modifier.height(8.dp)
 
     // TODO: add field tests
     // TODO: add loading progress
@@ -135,76 +125,6 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         }
     }
 
-    // TODO: add icons
-    @Composable
-    fun GeneralForm(
-        executionOrder: Long?,
-        onExecutionOrderChange: (Long?) -> Unit,
-        requestDate: LocalDate?,
-        onRequestDateChange: (LocalDate?) -> Unit,
-        workFinishDate: LocalDate?,
-        onWorkFinishDateChange: (LocalDate?) -> Unit,
-        clients: List<Client>,
-        selectedClient: Client?,
-        onSelectedClientChange: (Client?) -> Unit,
-        selectedFarm: Farm?,
-        onSelectedFarmChange: (Farm?) -> Unit,
-        selectedPump: Pump?,
-        onSelectedPumpChange: (Pump?) -> Unit,
-        modifier: Modifier = Modifier
-    ) {
-        Text(
-            text = "Général",
-            style = MaterialTheme.typography.titleSmall,
-            modifier = modifier
-        )
-        Spacer(modifier = spaceBetweenFields)
-        NumberTextField(
-            value = executionOrder,
-            label = "Bon d'exécution",
-            onValueChange = { onExecutionOrderChange(it) },
-            modifier = modifier
-        )
-        Spacer(modifier = spaceBetweenFields)
-        DateTextFieldAndPicker(
-            value = requestDate,
-            label = "Date de demande",
-            onValueChange = { onRequestDateChange(it) },
-            modifier = modifier
-        )
-        Spacer(modifier = spaceBetweenFields)
-        DateTextFieldAndPicker(
-            value = workFinishDate,
-            label = "Date de débit des travaux",
-            onValueChange = { onWorkFinishDateChange(it) },
-            modifier = modifier
-        )
-        Spacer(modifier = spaceBetweenFields)
-        AutoCompleteTextField(
-            label = "Client",
-            value = selectedClient?.name,
-            source = clients,
-            onSelect = { client ->
-                Logger.debug("Selected ${client.name} client")
-                onSelectedClientChange(client)
-            },
-            displayText = { client -> client.name }
-        )
-        Spacer(modifier = spaceBetweenFields)
-        selectedClient?.let {
-            AutoCompleteTextField(
-                label = "Ferme",
-                value = selectedFarm?.name,
-                source = emptyList<Farm>(),
-                onSelect = { farm ->
-                    Logger.debug("Selected ${farm.name} farm")
-                    onSelectedFarmChange(farm)
-                },
-                displayText = { farm -> farm.name }
-            )
-        }
-    }
-
     @Composable
     fun ActionButtons(
         saveReport: () -> Unit,
@@ -228,96 +148,6 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(text = "Annuler")
-            }
-        }
-    }
-
-    @Composable
-    fun NumberTextField(
-        value: Long?,
-        label: String,
-        onValueChange: (Long?) -> Unit,
-        modifier: Modifier = Modifier
-    ) {
-        var text by remember { mutableStateOf(value?.toString() ?: "") }
-
-        OutlinedTextField(
-            value = text,
-            onValueChange = { newValue ->
-                // Update the text state
-                text = newValue
-
-                // Convert to Long and update the parent state
-                onValueChange(newValue.toLongOrNull())
-            },
-            label = { Text(label) },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            modifier = modifier.fillMaxWidth()
-        )
-    }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun DateTextFieldAndPicker(
-        value: LocalDate?,
-        label: String,
-        onValueChange: (LocalDate?) -> Unit,
-        modifier: Modifier = Modifier
-    ) {
-        var showDatePicker by remember { mutableStateOf(false) }
-        var textValue by remember(value) {
-            mutableStateOf(
-                value?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
-            )
-        }
-        val datePickerState = rememberDatePickerState()
-        OutlinedTextField(
-            value = textValue,
-            onValueChange = {
-                textValue = it
-                try {
-                    val parsedDate = LocalDate.parse(it, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                    onValueChange(parsedDate)
-                } catch (e: Exception) {
-                    onValueChange(null) // Invalid date format
-                }
-            },
-            label = { Text(label) },
-            trailingIcon = {
-                IconButton(onClick = { showDatePicker = true }) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = "Select date")
-                }
-            },
-            modifier = modifier.fillMaxWidth()
-        )
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showDatePicker = false
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val selectedDate = Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                                onValueChange(selectedDate)
-                                textValue = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                            }
-                        },
-                        enabled = datePickerState.selectedDateMillis != null
-                    ) {
-                        Text(text = "Confirmer")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text(text = "Rejeter")
-                    }
-                }
-            ) {
-                DatePicker(state = datePickerState)
             }
         }
     }
