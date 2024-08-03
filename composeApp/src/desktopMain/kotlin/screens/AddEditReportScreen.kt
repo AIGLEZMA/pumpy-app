@@ -19,6 +19,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Client
 import models.Report
 import screenmodels.AddEditReportScreenModel
+import screenmodels.ClientsScreenModel
+import screenmodels.ReportsScreenModel
 import screens.report.GeneralForm
 
 val spaceBetweenFields = Modifier.height(8.dp)
@@ -31,12 +33,15 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val reportsScreenModel = rememberScreenModel { ReportsScreenModel() }
+        val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
 
         val state = screenModel.state
-        val clients = screenModel.clients
+        val clients = clientsScreenModel.clients
 
         var selectedClient by remember { mutableStateOf<Client?>(null) }
+        var selectedFarmName by remember { mutableStateOf<String?>("") }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -69,9 +74,10 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                         clients = clients,
                         selectedClient = selectedClient,
+                        fetchFarmNames = { screenModel.fetchFarmNames(it) },
                         onSelectedClientChange = { selectedClient = it },
-                        selectedFarm = null,
-                        onSelectedFarmChange = { },
+                        selectedFarmName = selectedFarmName,
+                        onSelectedFarmNameChange = { selectedFarmName = it },
                         selectedPump = null,
                         onSelectedPumpChange = { }
                     )

@@ -19,10 +19,13 @@ data class Farm(
 
 @Dao
 interface FarmDao {
+    @Insert
+    suspend fun insert(farm: Farm): Long
+
     @Transaction
     @Query("SELECT * FROM farm WHERE clientOwnerId = :clientId")
     suspend fun getFarmsByClientId(clientId: Long): List<Farm>
 
-    @Insert
-    suspend fun insert(farm: Farm): Long
+    @Query("SELECT * FROM farm")
+    suspend fun getAllFarms(): List<Farm>
 }

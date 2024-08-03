@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import models.Client
-import models.Farm
 import models.Pump
 import screens.spaceBetweenFields
 import ui.AutoCompleteTextField
@@ -26,8 +25,9 @@ fun GeneralForm(
     clients: List<Client>,
     selectedClient: Client?,
     onSelectedClientChange: (Client?) -> Unit,
-    selectedFarm: Farm?,
-    onSelectedFarmChange: (Farm?) -> Unit,
+    fetchFarmNames: (Client) -> List<String>,
+    selectedFarmName: String?,
+    onSelectedFarmNameChange: (String?) -> Unit,
     selectedPump: Pump?,
     onSelectedPumpChange: (Pump?) -> Unit,
     modifier: Modifier = Modifier
@@ -71,15 +71,16 @@ fun GeneralForm(
     )
     Spacer(modifier = spaceBetweenFields)
     selectedClient?.let {
+        val farmNames = fetchFarmNames(selectedClient)
         AutoCompleteTextField(
             label = "Ferme",
-            value = selectedFarm?.name,
-            source = emptyList<Farm>(),
-            onSelect = { farm ->
-                Logger.debug("Selected ${farm.name} farm")
-                onSelectedFarmChange(farm)
+            value = selectedFarmName,
+            source = farmNames,
+            onSelect = { farmName ->
+                Logger.debug("Selected ${farmName} farm")
+                onSelectedFarmNameChange(farmName)
             },
-            displayText = { farm -> farm.name }
+            displayText = { farmName -> farmName }
         )
     }
 }

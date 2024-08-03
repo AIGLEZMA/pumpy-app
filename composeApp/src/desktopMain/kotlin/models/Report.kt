@@ -51,4 +51,7 @@ interface ReportDao {
 
     @Query("SELECT * FROM report WHERE pumpOwnerId = :pumpId")
     suspend fun getReportByPumpId(pumpId: Long): List<Report>
+
+    @Query("SELECT * FROM report")
+    suspend fun getAllReports(): List<Report>
 }
