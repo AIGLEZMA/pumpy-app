@@ -15,7 +15,6 @@ import ui.DatePickerAndTextField
 import ui.NumberTextField
 import java.time.LocalDate
 
-// TODO: add icons
 @Composable
 fun GeneralForm(
     executionOrder: Long?,
