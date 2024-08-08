@@ -19,10 +19,13 @@ data class Pump(
 
 @Dao
 interface PumpDao {
+    @Insert
+    suspend fun insert(pump: Pump): Long
+
     @Transaction
     @Query("SELECT * FROM pump WHERE farmOwnerId = :farmId")
     suspend fun getPumpsByFarmId(farmId: Long): List<Pump>
 
-    @Insert
-    suspend fun insert(pump: Pump): Long
+    @Query("SELECT * FROM pump")
+    suspend fun getAllPumps(): List<Pump>
 }

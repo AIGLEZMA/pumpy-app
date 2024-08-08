@@ -8,7 +8,9 @@ import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
+import models.Client
 import models.Farm
+import models.Pump
 import models.Report
 
 class ReportsScreenModel : ScreenModel {
@@ -18,24 +20,17 @@ class ReportsScreenModel : ScreenModel {
     var farms by mutableStateOf<List<Farm>>(emptyList())
         private set
 
+    var pumps by mutableStateOf<List<Pump>>(emptyList())
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
     init {
         loadFarms()
+        loadPumps()
         loadReports()
     }
-
-//    fun deleteUser(user: User) {
-//        Logger.debug("[User] Deleting user (username: ${user.username})...")
-//        screenModelScope.launch {
-//            val userDao = DatabaseProvider.getDatabase().userDao()
-//            userDao.delete(user)
-//            users = users.filter { it != user }
-//        }.invokeOnCompletion {
-//            Logger.debug("[User] Deleting user (username: ${user.username}) DONE")
-//        }
-//    }
 
     fun loadFarms() {
         Logger.debug("[Farm] Loading farms...")
@@ -49,6 +44,18 @@ class ReportsScreenModel : ScreenModel {
         }
     }
 
+    fun loadPumps() {
+        Logger.debug("[Pump] Loading pumps...")
+        screenModelScope.launch {
+            isLoading = true
+            val pumpDao = DatabaseProvider.getDatabase().pumpDao()
+            pumps = pumpDao.getAllPumps()
+            isLoading = false
+        }.invokeOnCompletion {
+            Logger.debug("[Pump] Loaded ${pumps.size} pump(s)")
+        }
+    }
+
     fun loadReports() {
         Logger.debug("[Report] Loading reports...")
         screenModelScope.launch {
@@ -59,5 +66,17 @@ class ReportsScreenModel : ScreenModel {
         }.invokeOnCompletion {
             Logger.debug("[Report] Loaded ${reports.size} report(s)")
         }
+    }
+
+    fun fetchFarmNames(client: Client): List<String> {
+        return farms.filter { it.clientOwnerId == client.clientId }.map { it.name }
+    }
+
+    fun fetchPumpNames(farmName: String): List<String> {
+        val farm = farms.filter { it.name.equals(farmName, true) }.firstOrNull()
+        if (farm == null) {
+            return emptyList()
+        }
+        return pumps.filter { it.pumpId == farm.farmId }.map { it.name }
     }
 }

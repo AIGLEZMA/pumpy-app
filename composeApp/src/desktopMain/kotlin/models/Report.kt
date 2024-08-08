@@ -29,12 +29,12 @@ data class Report(
     val pump: String?,
     val elements: String?,
     val notes: String?,
-    val quotation: Long,
-    val invoice: Long
+    val quotation: Long = 0L,
+    val invoice: Long = 0L
 ) {
     enum class OperationType(val beautiful: String) {
-        ASSEMBLY("montage"),
-        DISASSEMBLY("démontage")
+        ASSEMBLY("Montage"),
+        DISASSEMBLY("Démontage")
     }
 }
 

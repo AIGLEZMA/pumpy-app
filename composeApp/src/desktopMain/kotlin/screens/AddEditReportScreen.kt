@@ -1,6 +1,5 @@
 package screens
 
-import Logger
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.*
@@ -16,14 +15,15 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import models.Client
 import models.Report
+import models.Report.OperationType
 import screenmodels.AddEditReportScreenModel
 import screenmodels.ClientsScreenModel
 import screenmodels.ReportsScreenModel
 import screens.report.GeneralForm
+import screens.report.TechnicalForm
 
-val spaceBetweenFields = Modifier.height(8.dp)
+val spaceBetweenFields = Modifier.height(4.dp)
 
 class AddEditReportScreen(private val report: Report? = null) : Screen {
 
@@ -40,16 +40,13 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val state = screenModel.state
         val clients = clientsScreenModel.clients
 
-        var selectedClient by remember { mutableStateOf<Client?>(null) }
-        var selectedFarmName by remember { mutableStateOf<String?>("") }
-
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center // Center the content
+                contentAlignment = Alignment.Center
             ) {
                 val scrollState = rememberScrollState()
                 Column(
@@ -73,24 +70,56 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         workFinishDate = screenModel.workFinishDate,
                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                         clients = clients,
-                        selectedClient = selectedClient,
-                        fetchFarmNames = { screenModel.fetchFarmNames(it) },
-                        onSelectedClientChange = { selectedClient = it },
-                        selectedFarmName = selectedFarmName,
-                        onSelectedFarmNameChange = { selectedFarmName = it },
-                        selectedPump = null,
-                        onSelectedPumpChange = { }
+                        selectedClient = screenModel.selectedClient,
+                        fetchFarmNames = { client -> reportsScreenModel.fetchFarmNames(client) },
+                        onSelectedClientChange = {
+                            screenModel.selectedClient = it
+                        },
+                        selectedFarmName = screenModel.selectedFarmName,
+                        onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
+                        fetchPumpNames = { farmName -> reportsScreenModel.fetchPumpNames(farmName) },
+                        selectedPumpName = screenModel.selectedPumpName,
+                        onSelectedPumpNameChange = { screenModel.selectedPumpName = it },
+                        operators = screenModel.operators,
+                        onOperatorAdd = { screenModel.addOperator() },
+                        onOperatorRemove = { screenModel.removeOperator(it) },
+                        onOperatorChange = { i, s -> screenModel.updateOperator(i, s) },
+                        selectedType = screenModel.type,
+                        onTypeSelected = { screenModel.type = it }
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TechnicalForm(
+                        depth = screenModel.depth,
+                        onDepthChange = { screenModel.depth = it },
+                        staticLevel = screenModel.staticLevel,
+                        onStaticLevelChange = { screenModel.staticLevel = it },
+                        dynamicLevel = screenModel.dynamicLevel,
+                        onDynamicLevelChange = { screenModel.dynamicLevel = it },
+                        pumpShimming = screenModel.pumpShimming,
+                        onPumpShimmingChange = { screenModel.pumpShimming = it },
+                        speed = screenModel.speed,
+                        onSpeedChange = { screenModel.speed = it },
+                        isAssembly = screenModel.type == OperationType.ASSEMBLY,
+                        engine = screenModel.engine,
+                        onEngineChange = { screenModel.engine = it },
+                        pump = screenModel.pump,
+                        onPumpChange = { screenModel.pump = it },
+                        elements = screenModel.elements,
+                        onElementsChange = { screenModel.elements = it },
+                        notes = screenModel.notes,
+                        onNotesChange = { screenModel.notes = it }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     ActionButtons(
-                        saveReport = { screenModel.saveReport() },
+                        saveReport = {
+                            screenModel.saveReport()
+                        },
                         onCancel = { navigator.pop() }
                     )
                     when {
                         state.isSaved -> {
                             LaunchedEffect(Unit) {
                                 navigator.pop()
-                                Logger.debug("Report (name: $state) edited.")
                             }
                         }
 

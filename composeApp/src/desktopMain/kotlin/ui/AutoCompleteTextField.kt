@@ -25,6 +25,7 @@ fun <T> AutoCompleteTextField(
     value: String?,
     source: List<T>,
     onSelect: (T) -> Unit,
+    onValueChange: (String) -> Unit,
     displayText: (T) -> String,
     modifier: Modifier = Modifier
 ) {
@@ -45,9 +46,10 @@ fun <T> AutoCompleteTextField(
                     modifier = Modifier.fillMaxWidth()
                         .onGloballyPositioned { coordinates -> textFieldSize = coordinates.size.toSize() },
                     value = category,
-                    onValueChange = {
-                        category = it
+                    onValueChange = { newValue ->
+                        category = newValue
                         expanded = true
+                        onValueChange(newValue)
                     },
                     placeholder = { Text(label) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
@@ -63,34 +65,29 @@ fun <T> AutoCompleteTextField(
             }
             AnimatedVisibility(visible = expanded) {
                 Card(
-                    modifier = Modifier.width(textFieldSize.width.dp) // Modifier.padding(horizontal = 5.dp).width(textFieldSize.width.dp)
+                    modifier = Modifier.width(textFieldSize.width.dp)
                 ) {
                     // TODO: add scroll in case there are too many entries
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 150.dp),
                     ) {
-                        if (category.isNotEmpty()) {
-                            items(source.filter {
-                                displayText(it).lowercase()
-                                    .contains(category.lowercase()) || displayText(it).lowercase().contains("others")
-                            }.sortedBy(displayText)) {
-                                ItemsCategory(
-                                    title = displayText(it)
-                                ) { title ->
-                                    category = displayText(it)
-                                    expanded = false
-                                    onSelect(it)
-                                }
-                            }
+                        val filteredSource = if (category.isNotEmpty()) {
+                            source.filter {
+                                displayText(it).lowercase().contains(category.lowercase())
+                                        || displayText(it).lowercase().contains("others")
+                            }.sortedBy(displayText)
                         } else {
-                            items(
-                                source.sortedBy(displayText)
-                            ) {
-                                ItemsCategory(title = displayText(it)) { title ->
-                                    category = displayText(it)
-                                    expanded = false
-                                    onSelect(it)
-                                }
+                            source.sortedBy(displayText)
+                        }
+
+                        items(filteredSource) { item ->
+                            ItemsCategory(
+                                title = displayText(item)
+                            ) { title ->
+                                category = displayText(item)
+                                expanded = false
+                                onSelect(item)
+                                onValueChange(category) // Call onValueChange when an item is selected
                             }
                         }
                     }
@@ -99,7 +96,6 @@ fun <T> AutoCompleteTextField(
         }
     }
 }
-
 
 @Composable
 fun ItemsCategory(
