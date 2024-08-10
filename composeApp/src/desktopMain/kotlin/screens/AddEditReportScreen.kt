@@ -1,5 +1,6 @@
 package screens
 
+import Logger
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.*
@@ -7,7 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -66,7 +68,10 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         executionOrder = screenModel.executionOrder,
                         onExecutionOrderChange = { screenModel.executionOrder = it },
                         requestDate = screenModel.requestDate,
-                        onRequestDateChange = { screenModel.requestDate = it },
+                        onRequestDateChange = {
+                            Logger.debug("[Report] @ Date Old: ${screenModel.requestDate} | New: $it")
+                            screenModel.requestDate = it
+                        },
                         workFinishDate = screenModel.workFinishDate,
                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                         clients = clients,
