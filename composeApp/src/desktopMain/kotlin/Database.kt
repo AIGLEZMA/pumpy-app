@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import models.*
 import java.nio.file.Paths
 
-@Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 3)
+@Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 5)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao

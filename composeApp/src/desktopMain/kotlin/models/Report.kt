@@ -10,10 +10,18 @@ import java.time.LocalDate
         parentColumns = ["pumpId"],
         childColumns = ["pumpOwnerId"],
         onDelete = ForeignKey.CASCADE
-    )]
+    ),
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["id"],
+            childColumns = ["creatorId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
 )
 data class Report(
     @PrimaryKey(autoGenerate = true) val reportId: Long = 0,
+    val creatorId: Long,
     val executionOrder: Long,
     val requestDate: LocalDate,
     val workFinishDate: LocalDate,
@@ -29,8 +37,11 @@ data class Report(
     val pump: String?,
     val elements: String?,
     val notes: String?,
-    val quotation: Long = 0L,
-    val invoice: Long = 0L
+    val purchaseRequest: String, // demande d'achat
+    val quotation: String, // devis
+    val purchaseOrder: String, // bon de commande
+    val invoice: String, // facture
+    val invoiceDate: LocalDate?,
 ) {
     enum class OperationType(val beautiful: String) {
         ASSEMBLY("Montage"),

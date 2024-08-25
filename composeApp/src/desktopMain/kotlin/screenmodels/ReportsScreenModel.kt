@@ -79,4 +79,15 @@ class ReportsScreenModel : ScreenModel {
         }
         return pumps.filter { it.pumpId == farm.farmId }.map { it.name }
     }
+
+    fun deleteReport(report: Report) {
+        Logger.debug("[Report] Deleting report (id: ${report.reportId})...")
+        screenModelScope.launch {
+            val reportDao = DatabaseProvider.getDatabase().reportDao()
+            reportDao.delete(report)
+            reports = reports.filter { it != report }
+        }.invokeOnCompletion {
+            Logger.debug("[Report] Deleting report (id: ${report.reportId}) DONE")
+        }
+    }
 }

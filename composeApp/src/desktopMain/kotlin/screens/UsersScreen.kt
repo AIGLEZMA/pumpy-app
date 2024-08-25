@@ -60,7 +60,7 @@ class UsersScreen : Screen {
 
         Layout(
             selected = "users",
-            onReportsClick = { navigator.push(LoginScreen()) },
+            onReportsClick = { navigator.push(ReportsScreen()) },
             onClientsClick = { navigator.push(ClientsScreen()) },
             onUsersClick = {},
             query = searchQuery,

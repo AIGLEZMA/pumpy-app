@@ -21,7 +21,9 @@ import models.Report
 import models.Report.OperationType
 import screenmodels.AddEditReportScreenModel
 import screenmodels.ClientsScreenModel
+import screenmodels.LoginScreenModel
 import screenmodels.ReportsScreenModel
+import screens.report.ExecutiveForm
 import screens.report.GeneralForm
 import screens.report.TechnicalForm
 
@@ -37,6 +39,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val reportsScreenModel = rememberScreenModel { ReportsScreenModel() }
         val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
+        val loginScreenModel = rememberScreenModel { LoginScreenModel() }
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
 
         val state = screenModel.state
@@ -104,7 +107,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         onPumpShimmingChange = { screenModel.pumpShimming = it },
                         speed = screenModel.speed,
                         onSpeedChange = { screenModel.speed = it },
-                        isAssembly = screenModel.type == OperationType.ASSEMBLY,
+                        type = screenModel.type ?: OperationType.ASSEMBLY,
                         engine = screenModel.engine,
                         onEngineChange = { screenModel.engine = it },
                         pump = screenModel.pump,
@@ -115,9 +118,26 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         onNotesChange = { screenModel.notes = it }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+                    ExecutiveForm(
+                        purchaseRequest = screenModel.purchaseRequest,
+                        onPurchaseRequestChange = { screenModel.purchaseRequest = it },
+                        quotation = screenModel.quotation,
+                        onQuotationChange = { screenModel.quotation = it },
+                        purchaseOrder = screenModel.purchaseOrder,
+                        onPurchaseOrderChange = { screenModel.purchaseOrder = it },
+                        invoice = screenModel.invoice,
+                        onInvoiceChange = { screenModel.invoice = it },
+                        invoiceDate = screenModel.invoiceDate,
+                        onInvoiceDateChange = { screenModel.invoiceDate = it }
+                    )
                     ActionButtons(
                         saveReport = {
-                            screenModel.saveReport()
+                            val loggedInUser = loginScreenModel.loginState.user
+                            if (loggedInUser == null) {
+                                Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
+                                return@ActionButtons
+                            }
+                            screenModel.saveReport(loggedInUser)
                         },
                         onCancel = { navigator.pop() }
                     )
@@ -145,7 +165,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
     @Composable
     fun Title(
         isEditMode: Boolean,
-        reportId: Long?
+        reportId: Long?,
     ) {
         Column(
             modifier = Modifier
@@ -169,7 +189,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
     fun ActionButtons(
         saveReport: () -> Unit,
         onCancel: () -> Unit,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
     ) {
         Row(
             modifier = modifier.fillMaxWidth(),

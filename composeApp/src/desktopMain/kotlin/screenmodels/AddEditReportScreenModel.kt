@@ -6,10 +6,7 @@ import androidx.compose.runtime.*
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
-import models.Client
-import models.Farm
-import models.Pump
-import models.Report
+import models.*
 
 class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel {
     var state by mutableStateOf(ReportState())
@@ -33,8 +30,11 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
     var pump by mutableStateOf(report?.pump)
     var elements by mutableStateOf(report?.elements)
     var notes by mutableStateOf(report?.notes)
+    var purchaseRequest by mutableStateOf(report?.purchaseRequest)
     var quotation by mutableStateOf(report?.quotation)
+    var purchaseOrder by mutableStateOf(report?.purchaseOrder)
     var invoice by mutableStateOf(report?.invoice)
+    var invoiceDate by mutableStateOf(report?.invoiceDate)
 
     init {
         report?.let {
@@ -58,45 +58,30 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
         }
     }
 
-    fun saveReport() {
+    fun saveReport(loggedInUser: User) {
         screenModelScope.launch {
             val reportDao = DatabaseProvider.getDatabase().reportDao()
             val pumpDao = DatabaseProvider.getDatabase().pumpDao()
             val farmDao = DatabaseProvider.getDatabase().farmDao()
 
-            if (executionOrder == null) {
-                state = state.copy(errorMessage = "Execution order must be filled in")
-                return@launch
-            }
+            val validationErrors = listOf(
+                executionOrder to "Le bon d'exécution doit être rempli",
+                requestDate to "La date de demande doit être remplie",
+                workFinishDate to "La date de débit des travaux doit être remplie",
+                type to "Le type doit être sélectionné",
+                selectedClient to "Le client doit être sélectionné",
+                purchaseRequest to "Le numéro de demande d'achat doit être rempli",
+                purchaseOrder to "Le numéro de bon de commande doit être rempli",
+                quotation to "Le numéro de devis doit être rempli",
+                invoice to "Le numéro de facture doit être rempli"
+            )
 
-            if (requestDate == null) {
-                state = state.copy(errorMessage = "Request date must be filled in")
-                return@launch
+            validationErrors.forEach { (field, errorMessage) ->
+                if (field == null) {
+                    state = state.copy(errorMessage = errorMessage)
+                    return@launch
+                }
             }
-
-            if (workFinishDate == null) {
-                state = state.copy(errorMessage = "Work finish date must be filled in")
-                return@launch
-            }
-
-            if (type == null) {
-                state = state.copy(errorMessage = "Type must be selected")
-                return@launch
-            }
-
-            if (selectedClient == null) {
-                state = state.copy(errorMessage = "Client must be selected")
-                return@launch
-            }
-//            if (quotation == null) {
-//                state = state.copy(errorMessage = "Quotation must be filled in")
-//                return@launch
-//            }
-//
-//            if (invoice == null) {
-//                state = state.copy(errorMessage = "Invoice must be filled in")
-//                return@launch
-//            }
 
             // Get or create the farm
             val farmId = if (!selectedFarmName.isNullOrEmpty()) {
@@ -122,6 +107,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
             }
 
             val newReport = Report(
+                creatorId = loggedInUser.id,
                 executionOrder = executionOrder!!.toLong(),
                 requestDate = requestDate!!,
                 workFinishDate = workFinishDate!!,
@@ -137,8 +123,11 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 pump = pump,
                 elements = elements,
                 notes = notes,
-                quotation = quotation ?: 0,
-                invoice = invoice ?: 0
+                purchaseRequest = purchaseRequest!!,
+                purchaseOrder = purchaseOrder!!,
+                invoiceDate = invoiceDate,
+                invoice = invoice!!,
+                quotation = quotation!!
             )
 
             if (state.isEditMode && report != null) {
@@ -158,6 +147,6 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
         val errorMessage: String? = null,
         val isLoading: Boolean = false,
         val isEditMode: Boolean = false,
-        val isSaved: Boolean = false
+        val isSaved: Boolean = false,
     )
 }

@@ -44,30 +44,30 @@ fun GeneralForm(
     onOperatorChange: (Int, String) -> Unit,
     selectedType: Report.OperationType?,
     onTypeSelected: (Report.OperationType) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = "Général",
         style = MaterialTheme.typography.titleSmall,
-        modifier = Modifier.padding(bottom = 16.dp)
+        modifier = modifier.padding(bottom = 16.dp)
     )
     NumberTextField(
         value = executionOrder,
         label = "Bon d'exécution",
         onValueChange = { onExecutionOrderChange(it) },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
     DatePickerAndTextField(
         value = requestDate,
         label = "Date de demande",
         onValueChange = { onRequestDateChange(it) },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
     DatePickerAndTextField(
         value = workFinishDate,
         label = "Date de débit des travaux",
         onValueChange = { onWorkFinishDateChange(it) },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
     AutoCompleteTextField(
         label = "Client",
@@ -79,7 +79,7 @@ fun GeneralForm(
         },
         displayText = { client -> client.name },
         onValueChange = { },
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     selectedClient?.let {
@@ -94,7 +94,7 @@ fun GeneralForm(
                 onSelectedFarmNameChange(farmName)
             },
             displayText = { farmName -> farmName },
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth()
         )
     }
     Spacer(modifier = spaceBetweenFields)
@@ -110,7 +110,7 @@ fun GeneralForm(
                 onSelectedPumpNameChange(pumpName)
             },
             displayText = { pumpName -> pumpName },
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth()
         )
     }
     Spacer(modifier = spaceBetweenFields)
@@ -119,13 +119,13 @@ fun GeneralForm(
         onOperatorAdd = onOperatorAdd,
         onOperatorChange = onOperatorChange,
         onOperatorRemove = onOperatorRemove,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     OperationTypeDropdown(
         selectedType = selectedType,
         onTypeSelected = onTypeSelected,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     )
 }
 
@@ -133,7 +133,7 @@ fun GeneralForm(
 fun OperationTypeDropdown(
     selectedType: Report.OperationType?,
     onTypeSelected: (Report.OperationType) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -175,7 +175,7 @@ fun OperatorForm(
     onOperatorAdd: () -> Unit,
     onOperatorChange: (Int, String) -> Unit,
     onOperatorRemove: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Card(
@@ -236,7 +236,7 @@ fun OperatorTextField(
     operator: String,
     onValueChange: (String) -> Unit,
     onRemoveClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,

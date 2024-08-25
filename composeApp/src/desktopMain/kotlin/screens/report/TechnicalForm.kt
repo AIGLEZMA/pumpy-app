@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import models.Report
 import screens.spaceBetweenFields
 import ui.NumberTextField
 
@@ -28,7 +29,7 @@ fun TechnicalForm(
     onPumpShimmingChange: (Long?) -> Unit,
     speed: Float?,
     onSpeedChange: (Float?) -> Unit,
-    isAssembly: Boolean,
+    type: Report.OperationType,
     engine: String?,
     onEngineChange: (String) -> Unit,
     pump: String?,
@@ -37,7 +38,7 @@ fun TechnicalForm(
     onElementsChange: (String) -> Unit,
     notes: String?,
     onNotesChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = "Technique",
@@ -86,8 +87,7 @@ fun TechnicalForm(
         singleLine = true,
         modifier = modifier.fillMaxWidth()
     )
-
-    if (isAssembly) {
+    if (type == Report.OperationType.ASSEMBLY) {
         Spacer(modifier = spaceBetweenFields)
         OutlinedTextField(
             value = engine ?: "",
@@ -130,7 +130,7 @@ fun TechnicalForm(
 fun LargeTextBox(
     notes: String?,
     onNotesChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
         value = notes ?: "",

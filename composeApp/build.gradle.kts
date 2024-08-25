@@ -37,7 +37,10 @@ kotlin {
             implementation(libs.voyager.screenmodel)
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
+            // TODO: refactor this
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+            implementation("io.github.vinceglb:filekit-core:0.8.1")
+            implementation("io.github.vinceglb:filekit-compose:0.8.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -45,6 +48,11 @@ kotlin {
             implementation(libs.bcrypt)
             implementation(libs.coroutines.core)
             implementation(libs.coroutines.swing)
+
+            implementation("com.itextpdf:kernel:8.0.5")
+            implementation("com.itextpdf:io:8.0.5")
+            implementation("com.itextpdf:layout:8.0.5")
+            implementation("com.itextpdf:html2pdf:5.0.5")
         }
     }
 }
