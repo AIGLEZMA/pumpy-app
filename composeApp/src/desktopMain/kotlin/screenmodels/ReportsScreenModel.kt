@@ -2,6 +2,7 @@ package screenmodels
 
 import DatabaseProvider
 import Logger
+import ReportPdf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import models.Client
 import models.Farm
 import models.Pump
 import models.Report
+import java.nio.file.Paths
 
 class ReportsScreenModel : ScreenModel {
     var reports by mutableStateOf<List<Report>>(emptyList())
@@ -73,7 +75,7 @@ class ReportsScreenModel : ScreenModel {
     }
 
     fun fetchPumpNames(farmName: String): List<String> {
-        val farm = farms.filter { it.name.equals(farmName, true) }.firstOrNull()
+        val farm = farms.firstOrNull { it.name.equals(farmName, true) }
         if (farm == null) {
             return emptyList()
         }
@@ -88,6 +90,28 @@ class ReportsScreenModel : ScreenModel {
             reports = reports.filter { it != report }
         }.invokeOnCompletion {
             Logger.debug("[Report] Deleting report (id: ${report.reportId}) DONE")
+        }
+    }
+
+    fun savePdf(
+        report: Report,
+        clientUsername: String,
+        creatorName: String,
+        farmName: String,
+        pumpName: String
+    ) {
+        Logger.debug("[Report] Saving pdf of a report (id: ${report.reportId}) ...")
+        screenModelScope.launch {
+            ReportPdf.generateAndSave(
+                report = report,
+                clientUsername = clientUsername,
+                creatorName = creatorName,
+                farmName = farmName,
+                pumpName = pumpName,
+                Paths.get(System.getProperty("user.home"), "test.pdf")
+            )
+        }.invokeOnCompletion {
+            Logger.debug("[Report] Saving pdf done!")
         }
     }
 }

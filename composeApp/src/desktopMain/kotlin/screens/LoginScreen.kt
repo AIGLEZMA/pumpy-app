@@ -119,7 +119,7 @@ class LoginScreen : Screen {
                     when {
                         loginState.isAuthenticated -> {
                             LaunchedEffect(Unit) {
-                                navigator.push(UsersScreen())
+                                navigator.push(ReportsScreen())
                             }
                         }
 

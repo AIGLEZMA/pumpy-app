@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -39,7 +40,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val reportsScreenModel = rememberScreenModel { ReportsScreenModel() }
         val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
-        val loginScreenModel = rememberScreenModel { LoginScreenModel() }
+        val loginScreenModel = navigator.rememberNavigatorScreenModel{ LoginScreenModel() }
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
 
         val state = screenModel.state

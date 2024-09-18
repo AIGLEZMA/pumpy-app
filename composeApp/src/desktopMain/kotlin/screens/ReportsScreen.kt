@@ -110,7 +110,7 @@ class ReportsScreen : Screen {
                             onReportEditClick = {
                                 navigator.push(AddEditReportScreen(it))
                             }, // TODO: permissions
-                            onReportSaveClick = { },
+                            onReportSaveClick = { report, clientUsername, creatorName, farm, pump -> screenModel.savePdf(report, clientUsername, creatorName, farm, pump) },
                             onReportPrintClick = { },
                             onReportDeleteClick = { reportToDelete = it } // TODO: permissions
                         )
@@ -171,7 +171,7 @@ class ReportsScreen : Screen {
         clients: List<Client>,
         users: List<User>,
         onReportEditClick: (Report) -> Unit,
-        onReportSaveClick: (Report) -> Unit,
+        onReportSaveClick: (Report, String, String, String, String) -> Unit,
         onReportPrintClick: (Report) -> Unit,
         onReportDeleteClick: (Report) -> Unit,
         modifier: Modifier = Modifier,
@@ -253,7 +253,7 @@ class ReportsScreen : Screen {
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         IconButton(
-                            onClick = { onReportSaveClick(report) },
+                            onClick = { onReportSaveClick(report, client?.name ?: "", creator?.username ?: "", farm?.name ?: "", pump?.name ?: "") },
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(

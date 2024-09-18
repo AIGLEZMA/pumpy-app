@@ -9,20 +9,16 @@ plugins {
     kotlin("plugin.serialization") version "2.0.0"
 }
 
-room {
-    schemaDirectory("$projectDir/schemas")
-}
+room { schemaDirectory("$projectDir/schemas") }
 
-dependencies {
-    ksp(libs.androidx.room.compiler)
-}
+dependencies { ksp(libs.androidx.room.compiler) }
 
 kotlin {
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -57,7 +53,6 @@ kotlin {
     }
 }
 
-
 compose.desktop {
     application {
         mainClass = "MainKt"
@@ -68,4 +63,5 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
 }
