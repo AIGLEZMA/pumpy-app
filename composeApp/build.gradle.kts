@@ -64,4 +64,3 @@ compose.desktop {
         }
     }
 }
-}

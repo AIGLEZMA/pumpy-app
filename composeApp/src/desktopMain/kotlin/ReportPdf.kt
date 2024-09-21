@@ -19,7 +19,8 @@ object ReportPdf {
     ) {
         // val logoPath = javaClass.getResource("/logo.png").toExternalForm()
         // println(logoPath)
-        val svgDiagramPath = javaClass.getResource("/files/diagram.svg").toExternalForm()
+        // val svgDiagramPath = javaClass.getResource("/files/diagram.svg").toExternalForm()
+        val svgDiagramPath = javaClass.getResource("/diagram.svg").toExternalForm()
         val htmlContent =
                 """
             <!DOCTYPE html>
