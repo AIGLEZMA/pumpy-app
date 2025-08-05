@@ -56,7 +56,6 @@ class ReportsScreen : Screen {
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
-        var isDarkMode by rememberSaveable { mutableStateOf(false) }
         var reportToDelete by remember { mutableStateOf<Report?>(null) }
 
         LaunchedEffect(Unit) {
@@ -80,8 +79,8 @@ class ReportsScreen : Screen {
                 loginScreenModel.logout()
                 navigator.popUntilRoot()
             },
-            isDarkMode = isDarkMode, // TODO
-            onToggleTheme = {}, // TODO
+            isDarkMode = Theme.isDarkTheme,
+            onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditReportScreen()) }
         ) {
             // TODO: no reports view
@@ -110,7 +109,15 @@ class ReportsScreen : Screen {
                             onReportEditClick = {
                                 navigator.push(AddEditReportScreen(it))
                             }, // TODO: permissions
-                            onReportSaveClick = { report, clientUsername, creatorName, farm, pump -> screenModel.savePdf(report, clientUsername, creatorName, farm, pump) },
+                            onReportSaveClick = { report, clientUsername, creatorName, farm, pump ->
+                                screenModel.savePdf(
+                                    report,
+                                    clientUsername,
+                                    creatorName,
+                                    farm,
+                                    pump
+                                )
+                            },
                             onReportPrintClick = { },
                             onReportDeleteClick = { reportToDelete = it } // TODO: permissions
                         )
@@ -253,7 +260,15 @@ class ReportsScreen : Screen {
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         IconButton(
-                            onClick = { onReportSaveClick(report, client?.name ?: "", creator?.username ?: "", farm?.name ?: "", pump?.name ?: "") },
+                            onClick = {
+                                onReportSaveClick(
+                                    report,
+                                    client?.name ?: "",
+                                    creator?.username ?: "",
+                                    farm?.name ?: "",
+                                    pump?.name ?: ""
+                                )
+                            },
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(

@@ -1,6 +1,7 @@
 package screens
 
 import AccountIcon
+import Theme
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -44,7 +45,6 @@ class ClientsScreen : Screen {
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
-        var isDarkMode by rememberSaveable { mutableStateOf(false) }
         var clientToDelete by remember { mutableStateOf<Client?>(null) }
 
         LaunchedEffect(Unit) {
@@ -68,8 +68,8 @@ class ClientsScreen : Screen {
                 loginScreenModel.logout()
                 navigator.popUntilRoot()
             },
-            isDarkMode = isDarkMode, // TODO
-            onToggleTheme = {}, // TODO
+            isDarkMode = Theme.isDarkTheme,
+            onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditClientScreen()) }
         ) {
             // TODO: no clients view

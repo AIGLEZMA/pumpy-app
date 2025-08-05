@@ -1,6 +1,7 @@
 package screens
 
 import AccountIcon
+import Theme
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -44,7 +45,6 @@ class UsersScreen : Screen {
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
-        var isDarkMode by rememberSaveable { mutableStateOf(false) }
         var userToDelete by remember { mutableStateOf<User?>(null) }
 
         LaunchedEffect(Unit) {
@@ -69,8 +69,8 @@ class UsersScreen : Screen {
                 loginScreenModel.logout()
                 navigator.popUntilRoot()
             },
-            isDarkMode = isDarkMode, // TODO
-            onToggleTheme = {}, // TODO
+            isDarkMode = Theme.isDarkTheme,
+            onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditUserScreen()) }
         ) {
             if (isLoading) {
