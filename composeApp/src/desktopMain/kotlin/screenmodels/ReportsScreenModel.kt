@@ -8,11 +8,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import models.Client
 import models.Farm
 import models.Pump
 import models.Report
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.FilenameFilter
 import java.nio.file.Paths
 
 class ReportsScreenModel : ScreenModel {
@@ -112,6 +117,51 @@ class ReportsScreenModel : ScreenModel {
             )
         }.invokeOnCompletion {
             Logger.debug("[Report] Saving pdf done!")
+        }
+
+        screenModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val parentFrame = Frame()
+                val fileDialog = FileDialog(parentFrame, "Save PDF Report", FileDialog.SAVE)
+
+                // Set a default file name based on the report.
+                fileDialog.file = "Rapport-${report.reportId}.pdf"
+                fileDialog.filenameFilter = FilenameFilter { _, name ->
+                    name.endsWith(".pdf")
+                }
+
+                // Show the dialog. This call is blocking until the user closes it.
+                fileDialog.isVisible = true
+
+                // Get the result. If directory and file are not null, the user chose a location.
+                val selectedDirectory = fileDialog.directory
+                val selectedFile = fileDialog.file
+
+                if (selectedDirectory != null && selectedFile != null) {
+                    val outputPath = Paths.get(selectedDirectory, selectedFile)
+
+                    try {
+                        ReportPdf.generateAndSave(
+                            report = report,
+                            clientUsername = clientUsername,
+                            creatorName = creatorName,
+                            farmName = farmName,
+                            pumpName = pumpName,
+                            outputPath = outputPath
+                        )
+                        Logger.debug("[Report] Saving pdf done!")
+                        // TODO: Add a UI notification to the user that the file was saved.
+                    } catch (e: Exception) {
+                        Logger.error("[Report] Error saving file: ${e.message}", e)
+                        // TODO: Add a UI notification to the user about the error.
+                    }
+                } else {
+                    Logger.debug("[Report] Save operation cancelled by user.")
+                }
+
+                // Dispose of the dummy frame to free up resources.
+                parentFrame.dispose()
+            }
         }
     }
 }

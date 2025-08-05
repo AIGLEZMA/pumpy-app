@@ -9,4 +9,9 @@ object Logger {
         }
     }
 
+    fun error(message: String, e: Exception) {
+        println("[Magrinov] ERROR!: $message")
+        e.printStackTrace()
+    }
+
 }
