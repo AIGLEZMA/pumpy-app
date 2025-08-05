@@ -27,7 +27,7 @@ object DatabaseProvider {
     @OptIn(DelicateCoroutinesApi::class)
     fun getDatabase(): AppDatabase {
         return instance ?: synchronized(this) {
-            val databasePath = Paths.get(System.getProperty("user.home"), "Magrinov/app_database.db").toString()
+            val databasePath = getApplicationDataPath()
             Logger.debug("[Database] Database path: $databasePath")
             val newInstance = Room.databaseBuilder<AppDatabase>(
                 name = databasePath
@@ -52,4 +52,36 @@ object DatabaseProvider {
             newInstance
         }
     }
+
+    private fun getApplicationDataPath(): String {
+        val os = System.getProperty("os.name").lowercase()
+        val appName = "Magrinov"
+        val userHome = System.getProperty("user.home")
+
+        val basePath = when {
+            os.contains("win") -> {
+                // Windows: C:\Users\<username>\AppData\Roaming\
+                System.getenv("APPDATA") ?: Paths.get(userHome, "AppData", "Roaming").toString()
+            }
+
+            os.contains("mac") -> {
+                // macOS: ~/Library/Application Support/
+                Paths.get(userHome, "Library", "Application Support").toString()
+            }
+            // Linux and other Unix-like systems
+            else -> {
+                // Linux: ~/.local/share/
+                Paths.get(userHome, ".local", "share").toString()
+            }
+        }
+
+        // Combine the base path with your application's directory and create it if it doesn't exist
+        val appDataDir = Paths.get(basePath, appName).toFile()
+        if (!appDataDir.exists()) {
+            appDataDir.mkdirs()
+        }
+
+        return Paths.get(appDataDir.absolutePath, "app_database.db").toString()
+    }
+
 }
