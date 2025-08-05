@@ -35,8 +35,6 @@ kotlin {
             implementation(libs.sqlite.bundled)
             // TODO: refactor this
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-            implementation("io.github.vinceglb:filekit-core:0.8.1")
-            implementation("io.github.vinceglb:filekit-compose:0.8.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -58,9 +56,15 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ma.asma.magrinov"
-            packageVersion = "1.0.0"
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe)
+            packageName = "Magrinov"
+            version = "1.0.0"
+            vendor = "Magrinov"
+
+            windows {
+                // Specify the icon file for Windows. This should be an .ico file.
+                iconFile.set(project.file("src/commonMain/resources/icon.ico"))
+            }
         }
     }
 }
