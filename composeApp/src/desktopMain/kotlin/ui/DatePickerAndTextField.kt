@@ -21,11 +21,18 @@ fun DatePickerAndTextField(
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    var textValue by remember(value) {
-        mutableStateOf(
-            value?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
-        )
+
+    var textValue by remember {
+        mutableStateOf(value?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: "")
     }
+
+    LaunchedEffect(value) {
+        val newTextValue = value?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
+        if (textValue != newTextValue) {
+            textValue = newTextValue
+        }
+    }
+
     var isError by remember { mutableStateOf(false) }
     val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").withResolverStyle(ResolverStyle.STRICT)
     val datePickerState = rememberDatePickerState(
@@ -35,33 +42,35 @@ fun DatePickerAndTextField(
     OutlinedTextField(
         value = textValue,
         onValueChange = { newValue ->
-            // Allow only numbers and slashes
-            if (newValue.all { it.isDigit() || it == '/' }) {
+            if (newValue.all { it.isDigit() || it == '/' } || newValue.isEmpty()) {
                 textValue = newValue
+
                 if (newValue.length == 10) {
                     try {
                         val parsedDate = LocalDate.parse(newValue, dateFormatter)
                         onValueChange(parsedDate)
                         isError = false
                     } catch (e: Exception) {
-                        onValueChange(null) // Invalid date format
                         isError = true
                     }
                 } else {
-                    onValueChange(null)
                     isError = false
                 }
             } else {
-                // If input is invalid, set error state
                 isError = true
+            }
+
+            if (newValue.isEmpty()) {
+                onValueChange(null)
             }
         },
         label = { Text(label) },
+        singleLine = true,
         isError = isError,
         supportingText = {
             if (isError) {
                 Text(
-                    text = "Veuillez entrer une date valide",
+                    text = "Veuillez entrer une date valide (ex: 07/08/2025)",
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -86,8 +95,6 @@ fun DatePickerAndTextField(
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
                             onValueChange(selectedDate)
-                            textValue = selectedDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                            isError = false
                         }
                     },
                     enabled = datePickerState.selectedDateMillis != null
