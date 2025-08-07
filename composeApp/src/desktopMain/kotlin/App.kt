@@ -8,6 +8,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
+import models.User
 import screens.LoginScreen
 import screens.SplashScreen
 import java.nio.file.Paths
@@ -23,7 +24,17 @@ fun App() {
 
     LaunchedEffect(Unit) {
         val startTime = System.currentTimeMillis()
-        DatabaseProvider.getDatabase()
+        val database = DatabaseProvider.getDatabase()
+
+        // Check if the admin user exists and create it if not
+        val existingUser = database.userDao().getUserByUsername("admin")
+        if (existingUser == null) {
+            val adminPassword = System.getenv("ADMIN_PASSWORD") ?: "admin"
+            val hashedPassword = Password.hash(adminPassword)
+            database.userDao().insert(User(username = "admin", password = hashedPassword, isAdmin = true))
+            Logger.debug("[Database] Admin user created during app startup.")
+        }
+
         isDatabaseInitialized.value = true
 
         // Ensure the splash screen is shown for at least 2 seconds to prevent flickering
