@@ -17,11 +17,13 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import models.Company
 import models.User
 import screenmodels.AddEditUserScreenModel
 
 class AddEditUserScreen(private val user: User? = null) : Screen {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -31,6 +33,11 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
         var username by remember { mutableStateOf(userState.username) }
         var password by remember { mutableStateOf(userState.password) }
         var passwordVisible by remember { mutableStateOf(false) }
+
+        var company by remember { mutableStateOf(userState.company) }
+        var expanded by remember { mutableStateOf(false) }
+        val companies = listOf(Company.MAGRINOV.pretty, Company.LOTRAX.pretty)
+        var selectedCompanyText by remember { mutableStateOf(userState.company.pretty) }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -63,6 +70,7 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Mot de passe") },
+                    singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
@@ -75,8 +83,39 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                     modifier = Modifier.fillMaxWidth(0.21f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth(0.21f)
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.menuAnchor(),
+                        readOnly = true,
+                        value = selectedCompanyText,
+                        onValueChange = {},
+                        label = { Text("Entreprise") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        companies.forEach { companyOption ->
+                            DropdownMenuItem(
+                                text = { Text(companyOption) },
+                                onClick = {
+                                    selectedCompanyText = companyOption
+                                    company = Company.valueOf(companyOption)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { screenModel.saveUser(username, password) },
+                    onClick = { screenModel.saveUser(username, password, company) },
                     modifier = Modifier.fillMaxWidth(0.21f)
                 ) {
                     Text(text = "Enregister")
