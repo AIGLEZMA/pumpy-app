@@ -14,8 +14,8 @@ fun main() = application {
         print(svgDiagramPath2.toExternalForm())
     }
     Window(
-            state = windowState,
-            onCloseRequest = ::exitApplication,
-            title = "Magrinov",
+        state = windowState,
+        onCloseRequest = ::exitApplication,
+        title = "Magrinov",
     ) { App() }
 }
