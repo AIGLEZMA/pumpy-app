@@ -42,11 +42,6 @@ kotlin {
             implementation(libs.coroutines.core)
             implementation(libs.coroutines.swing)
 
-            implementation("com.itextpdf:kernel:8.0.5")
-            implementation("com.itextpdf:io:8.0.5")
-            implementation("com.itextpdf:layout:8.0.5")
-            implementation("com.itextpdf:html2pdf:5.0.5")
-
             implementation("com.github.librepdf:openpdf:2.2.4")
         }
     }
