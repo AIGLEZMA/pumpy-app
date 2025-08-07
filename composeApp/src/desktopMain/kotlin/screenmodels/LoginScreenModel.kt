@@ -8,7 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import models.User
 
 class LoginScreenModel : ScreenModel {
@@ -22,17 +24,23 @@ class LoginScreenModel : ScreenModel {
 
             val userDao = DatabaseProvider.getDatabase().userDao()
             val user = userDao.getUserByUsername(username)
-            loginState = if (user != null) {
-                if (Password.verify(password, user.password)) {
+
+            if (user != null) {
+                // Perform the CPU-intensive password verification on the Default dispatcher
+                val isPasswordCorrect = withContext(Dispatchers.Default) {
+                    Password.verify(password, user.password)
+                }
+
+                loginState = if (isPasswordCorrect) {
                     LoginState(user = user, isAuthenticated = true)
                 } else {
                     LoginState(errorMessage = "Mot de passe incorrecte")
                 }
             } else {
-                LoginState(errorMessage = "Utilisateur non trouvé")
+                loginState = LoginState(errorMessage = "Utilisateur non trouvé")
             }
         }.invokeOnCompletion {
-            Logger.debug("[Login] Logging in as $username : ${if (loginState.isAuthenticated) "SUCCESS" else "FAILURE (${loginState.errorMessage}"}")
+            Logger.debug("[Login] Logging in as $username : ${if (loginState.isAuthenticated) "SUCCESS" else "FAILURE (${loginState.errorMessage})"} ")
         }
     }
 
