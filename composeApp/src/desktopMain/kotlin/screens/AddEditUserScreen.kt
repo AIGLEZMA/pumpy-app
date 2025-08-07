@@ -20,6 +20,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Company
 import models.User
 import screenmodels.AddEditUserScreenModel
+import java.util.Locale.getDefault
 
 class AddEditUserScreen(private val user: User? = null) : Screen {
 
@@ -106,7 +107,7 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                                 text = { Text(companyOption) },
                                 onClick = {
                                     selectedCompanyText = companyOption
-                                    company = Company.valueOf(companyOption)
+                                    company = Company.valueOf(companyOption.uppercase(getDefault()))
                                     expanded = false
                                 }
                             )
