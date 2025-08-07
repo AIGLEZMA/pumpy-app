@@ -1,20 +1,17 @@
 [versions]
-compose-plugin = "1.6.11"
+compose-plugin = "1.8.2"
 junit = "4.13.2"
-kotlin = "2.0.0"
+kotlin = "2.2.0"
 
-voyager = "1.1.0-beta02"
-androidx-room = "2.7.0-alpha05"
-sqlite = "2.5.0-SNAPSHOT"
-ksp = "2.0.0-1.0.22"
+voyager = "1.1.0-beta03"
+androidx-room = "2.7.2"
+sqlite = "2.5.2"
+ksp = "2.2.0-2.0.2"
 bcrypt = "0.10.2"
-kotlinx-coroutines = "1.8.1"
+kotlinx-coroutines = "1.10.2"
+kotlinx-serialization-json = "1.9.0"
 
 [libraries]
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -28,6 +25,7 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "androidx-room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 
 [plugins]
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }

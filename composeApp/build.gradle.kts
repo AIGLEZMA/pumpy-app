@@ -33,8 +33,7 @@ kotlin {
             implementation(libs.voyager.screenmodel)
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
-            // TODO: refactor this
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+            implementation(libs.kotlinx.serialization.json)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -48,7 +47,7 @@ kotlin {
             implementation("com.itextpdf:layout:8.0.5")
             implementation("com.itextpdf:html2pdf:5.0.5")
 
-            implementation("com.github.librepdf:openpdf:1.3.30")
+            implementation("com.github.librepdf:openpdf:2.2.4")
         }
     }
 }
