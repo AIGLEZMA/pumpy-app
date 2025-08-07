@@ -2,12 +2,12 @@ package screenmodels
 
 import DatabaseProvider
 import Logger
-import ReportPdf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import generateAndSaveWithOpenPDF
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -107,19 +107,6 @@ class ReportsScreenModel : ScreenModel {
     ) {
         Logger.debug("[Report] Saving pdf of a report (id: ${report.reportId}) ...")
         screenModelScope.launch {
-            ReportPdf.generateAndSave(
-                report = report,
-                clientUsername = clientUsername,
-                creatorName = creatorName,
-                farmName = farmName,
-                pumpName = pumpName,
-                Paths.get(System.getProperty("user.home"), "test.pdf")
-            )
-        }.invokeOnCompletion {
-            Logger.debug("[Report] Saving pdf done!")
-        }
-
-        screenModelScope.launch {
             withContext(Dispatchers.IO) {
                 val parentFrame = Frame()
                 val fileDialog = FileDialog(parentFrame, "Save PDF Report", FileDialog.SAVE)
@@ -141,7 +128,7 @@ class ReportsScreenModel : ScreenModel {
                     val outputPath = Paths.get(selectedDirectory, selectedFile)
 
                     try {
-                        ReportPdf.generateAndSave(
+                        generateAndSaveWithOpenPDF(
                             report = report,
                             clientUsername = clientUsername,
                             creatorName = creatorName,

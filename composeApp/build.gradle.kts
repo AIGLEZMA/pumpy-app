@@ -47,6 +47,8 @@ kotlin {
             implementation("com.itextpdf:io:8.0.5")
             implementation("com.itextpdf:layout:8.0.5")
             implementation("com.itextpdf:html2pdf:5.0.5")
+
+            implementation("com.github.librepdf:openpdf:1.3.30")
         }
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import models.Client
 import models.Report
 import models.Report.OperationType
 import screenmodels.AddEditReportScreenModel
@@ -40,7 +42,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val reportsScreenModel = rememberScreenModel { ReportsScreenModel() }
         val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
-        val loginScreenModel = navigator.rememberNavigatorScreenModel{ LoginScreenModel() }
+        val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
 
         val state = screenModel.state
@@ -65,9 +67,22 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                     Spacer(modifier = Modifier.height(45.dp))
                     Title(
                         isEditMode = state.isEditMode,
-                        reportId = null
+                        reportId = report?.reportId
                     )
                     Spacer(modifier = Modifier.height(45.dp))
+                    println("Available clients: ${clients.map { it.clientId to it.name }}")
+                    println("Selected client from screenModel: ${screenModel.selectedClient}")
+
+                    val selectedClient: Client? = remember(clients, screenModel.selectedClient) {
+                        val screenClientId = screenModel.selectedClient?.clientId
+                        clients.firstOrNull { it.clientId == screenClientId }
+                    }
+                    LaunchedEffect(selectedClient) {
+                        if (selectedClient != null && selectedClient != screenModel.selectedClient) {
+                            Logger.debug("Updating selectedClient in screenModel to: ${selectedClient.name}")
+                            screenModel.selectedClient = selectedClient
+                        }
+                    }
                     GeneralForm(
                         executionOrder = screenModel.executionOrder,
                         onExecutionOrderChange = { screenModel.executionOrder = it },
@@ -79,7 +94,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         workFinishDate = screenModel.workFinishDate,
                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                         clients = clients,
-                        selectedClient = screenModel.selectedClient,
+                        selectedClient = selectedClient.also { client -> println("DEBUG: $client") },
                         fetchFarmNames = { client -> reportsScreenModel.fetchFarmNames(client) },
                         onSelectedClientChange = {
                             screenModel.selectedClient = it
@@ -196,19 +211,19 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(
-                onClick = saveReport,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(text = "Enregister")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = onCancel,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.weight(1f)
             ) {
                 Text(text = "Annuler")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            OutlinedButton(
+                onClick = saveReport,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = "Enregister")
             }
         }
     }
