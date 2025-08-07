@@ -1,6 +1,5 @@
 package screens
 
-import Logger
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -72,6 +71,7 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
                         }
                     },
                     label = { Text("Numéro de téléphone") },
+                    singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number
                     ),
