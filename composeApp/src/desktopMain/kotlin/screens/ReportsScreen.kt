@@ -1,5 +1,6 @@
 package screens
 
+import Theme
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
@@ -44,7 +46,7 @@ import java.util.*
 
 class ReportsScreen : Screen {
 
-    private val FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)
 
     @Preview
     @Composable
@@ -64,7 +66,8 @@ class ReportsScreen : Screen {
             screenModel.loadReports()
         }
 
-        val filteredReports = screenModel.reports.filter { report -> true } // TODO: filter
+        val filteredReports =
+            screenModel.reports.filter { report -> true } // TODO: Add filtering logic based on searchQuery
 
         val isLoading = screenModel.isLoading
 
@@ -83,7 +86,6 @@ class ReportsScreen : Screen {
             onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditReportScreen()) }
         ) {
-            // TODO: no reports view
             if (isLoading) {
                 Loading()
             } else {
@@ -108,7 +110,7 @@ class ReportsScreen : Screen {
                             users = usersScreenModel.users,
                             onReportEditClick = {
                                 navigator.push(AddEditReportScreen(it))
-                            }, // TODO: permissions
+                            }, // TODO: Add permissions check
                             onReportSaveClick = { report, clientUsername, creatorName, farm, pump ->
                                 screenModel.savePdf(
                                     report,
@@ -119,7 +121,7 @@ class ReportsScreen : Screen {
                                 )
                             },
                             onReportPrintClick = { },
-                            onReportDeleteClick = { reportToDelete = it } // TODO: permissions
+                            onReportDeleteClick = { reportToDelete = it } // TODO: Add permissions check
                         )
                         VerticalScrollbar(
                             modifier = Modifier
@@ -230,7 +232,7 @@ class ReportsScreen : Screen {
                     )
 
                     Text(
-                        report.requestDate.format(FORMATTER),
+                        report.requestDate.format(dateTimeFormatter),
                         modifier = Modifier.weight(2f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
@@ -350,14 +352,20 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Bon d'éxecution:")
+                                        Text(
+                                            text = "Bon d'éxecution:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.executionOrder.toString())
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Date de demande:")
+                                        Text(
+                                            text = "Date de demande:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(
                                             report.requestDate.format(
                                                 DateTimeFormatter.ofPattern(
@@ -371,7 +379,10 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Débit de travaux:")
+                                        Text(
+                                            text = "Débit de travaux:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(
                                             report.workFinishDate.format(
                                                 DateTimeFormatter.ofPattern(
@@ -385,28 +396,40 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Client:")
+                                        Text(
+                                            text = "Client:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(client?.name ?: "Inconnu")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Installation:")
+                                        Text(
+                                            text = "Installation:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(farm?.name ?: "Inconnu")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Pompe:")
+                                        Text(
+                                            text = "Pompe:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(pump?.name ?: "Inconnu")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Intervenants:")
+                                        Text(
+                                            text = "Intervenants:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.operators.joinToString(" - "))
                                     }
                                 }
@@ -423,42 +446,60 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Profondeur (m):")
+                                        Text(
+                                            text = "Profondeur (m):",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text("${report.depth} m")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Niveau statique (m):")
+                                        Text(
+                                            text = "Niveau statique (m):",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text("${report.staticLevel} m")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Niveau dynamique (m):")
+                                        Text(
+                                            text = "Niveau dynamique (m):",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text("${report.dynamicLevel} m")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Calage de pompe (m):")
+                                        Text(
+                                            text = "Calage de pompe (m):",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text("${report.pumpShimming} m")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Débit (m3/h):")
+                                        Text(
+                                            text = "Débit (m3/h):",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text("${report.speed} m3/h")
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Type:")
+                                        Text(
+                                            text = "Type:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.type.beautiful)
                                     }
                                     if (report.type == Report.OperationType.ASSEMBLY) {
@@ -466,21 +507,30 @@ class ReportsScreen : Screen {
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Moteur:")
+                                            Text(
+                                                text = "Moteur:",
+                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                            )
                                             Text(report.engine ?: "Inconnu")
                                         }
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Pompe:")
+                                            Text(
+                                                text = "Pompe:",
+                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                            )
                                             Text(report.pump ?: "Inconnu")
                                         }
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Text("Élements:")
+                                            Text(
+                                                text = "Élements:",
+                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                            )
                                             Text(report.elements ?: "Inconnu")
                                         }
                                     }
@@ -488,7 +538,11 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Travaux effectués & observations:")
+                                        Text(
+                                            text = "Travaux effectués & observations:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                                            modifier = Modifier.padding(bottom = 4.dp)
+                                        )
                                         Text(report.notes ?: "Inconnu")
                                     }
                                 }
@@ -505,36 +559,51 @@ class ReportsScreen : Screen {
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Demande d'achat:")
+                                        Text(
+                                            text = "Demande d'achat:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.purchaseRequest)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Devis:")
+                                        Text(
+                                            text = "Devis:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.quotation)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Bon de commande:")
+                                        Text(
+                                            text = "Bon de commande:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.purchaseOrder)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Facture:")
+                                        Text(
+                                            text = "Facture:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
                                         Text(report.invoice)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Date de facturation:")
-                                        Text(report.invoiceDate?.format(FORMATTER) ?: "Inconnu")
+                                        Text(
+                                            text = "Date de facturation:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                        Text(report.invoiceDate?.format(dateTimeFormatter) ?: "Inconnu")
                                     }
                                 }
                             }
