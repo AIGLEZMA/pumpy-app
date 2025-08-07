@@ -1,25 +1,50 @@
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.delay
 import screens.LoginScreen
+import screens.SplashScreen
 import java.nio.file.Paths
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 @Preview
 fun App() {
-    val colorScheme = if (Theme.isDarkTheme) {
-        DarkColorScheme
-    } else {
-        LightColorScheme
+    val isDatabaseInitialized = remember { mutableStateOf(false) }
+    val showSplash = remember { mutableStateOf(true) }
+
+    // Use a LaunchedEffect to initialize the database in the background
+
+    LaunchedEffect(Unit) {
+        val startTime = System.currentTimeMillis()
+        DatabaseProvider.getDatabase()
+        isDatabaseInitialized.value = true
+
+        // Ensure the splash screen is shown for at least 2 seconds to prevent flickering
+        val elapsedTime = System.currentTimeMillis() - startTime
+        if (elapsedTime < 2000) {
+            delay(2000 - elapsedTime)
+        }
+        showSplash.value = false
     }
+
+    val colorScheme = if (Theme.isDarkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
     ) {
-        Navigator(LoginScreen()) { navigator ->
-            SlideTransition(navigator = navigator)
+        if (showSplash.value) {
+            SplashScreen()
+        } else {
+            Navigator(LoginScreen()) { navigator ->
+                SlideTransition(navigator = navigator)
+            }
         }
     }
 }
