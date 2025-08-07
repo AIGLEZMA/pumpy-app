@@ -159,6 +159,11 @@ class UsersScreen : Screen {
         ) {
             items(sortedUsers) { user ->
                 val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
+                val supportingText = buildString {
+                    append(if (user.isAdmin) "Administrateur" else "Normal")
+                    append(" - ")
+                    append(user.company.pretty)
+                }
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),
                     overlineContent = {
@@ -167,7 +172,7 @@ class UsersScreen : Screen {
                         )
                     },
                     headlineContent = { Text(text = user.username, fontSize = 14.sp) },
-                    supportingContent = { if (user.isAdmin) Text("Administrateur") else Text("Normal") },
+                    supportingContent = { Text(text = supportingText) },
                     leadingContent = {
                         AccountIcon(firstLetter)
                     },
