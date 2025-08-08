@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -122,12 +121,15 @@ class LoginScreen : Screen {
                                 next = loginButtonFocusRequester
                             }
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = { screenModel.login(username, password) },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
                         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
+                        shape = MaterialTheme.shapes.small,
                         modifier = Modifier
                             .fillMaxWidth(0.21f)
+                            .height(54.dp) // Set a fixed height that matches the text fields
                             .focusRequester(loginButtonFocusRequester)
                             .onFocusChanged { focusState -> loginButtonIsFocused = focusState.isFocused }
                             .focusProperties {
@@ -148,6 +150,7 @@ class LoginScreen : Screen {
                                     navigator.push(ReportsScreen())
                                 }
                             }
+
                             loginState.errorMessage != null -> {
                                 Text(loginState.errorMessage, color = MaterialTheme.colorScheme.error)
                             }
