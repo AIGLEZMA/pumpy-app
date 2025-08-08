@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import generateAndSaveWithOpenPDF
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -128,6 +127,7 @@ class ReportsScreenModel : ScreenModel {
                     val outputPath = Paths.get(selectedDirectory, selectedFile)
 
                     try {
+                        /*
                         generateAndSaveWithOpenPDF(
                             report = report,
                             clientUsername = clientUsername,
@@ -136,6 +136,7 @@ class ReportsScreenModel : ScreenModel {
                             pumpName = pumpName,
                             outputPath = outputPath
                         )
+                         */
                         Logger.debug("[Report] Saving pdf done!")
                         // TODO: Add a UI notification to the user that the file was saved.
                     } catch (e: Exception) {

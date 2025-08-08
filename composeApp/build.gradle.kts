@@ -43,6 +43,8 @@ kotlin {
             implementation(libs.coroutines.swing)
 
             implementation("com.github.librepdf:openpdf:2.2.4")
+            implementation("com.github.librepdf:openpdf-kotlin:2.2.4")
+            implementation("com.github.librepdf:openpdf-fonts-extra:2.2.4")
         }
     }
 }

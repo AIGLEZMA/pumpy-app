@@ -1,250 +1,326 @@
 import com.lowagie.text.*
-import com.lowagie.text.pdf.PdfPCell
-import com.lowagie.text.pdf.PdfPTable
-import com.lowagie.text.pdf.PdfWriter
+import com.lowagie.text.List
+import com.lowagie.text.pdf.*
+import com.lowagie.text.pdf.draw.LineSeparator
 import models.Report
 import java.awt.Color
 import java.io.FileOutputStream
 import java.nio.file.Path
-import java.time.format.DateTimeFormatter
+import java.nio.file.Paths
+import java.time.LocalDate
 
-private val FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-private val BORDER_COLOR = Color.decode("#000000") // Black for borders
+fun main() {
+    val mockReport = Report(
+        reportId = 1,
+        creatorId = 101,
+        executionOrder = 12345,
+        requestDate = LocalDate.of(2025, 7, 15),
+        workStartDate = LocalDate.of(2025, 8, 5),
+        workFinishDate = LocalDate.of(2025, 8, 8),
+        pumpOwnerId = 201,
+        operators = listOf("John Doe", "Jane Smith"),
+        type = Report.OperationType.ASSEMBLY,
+        depth = 120L,
+        staticLevel = 30L,
+        dynamicLevel = 45L,
+        pumpShimming = 110L,
+        speed = 50.5f,
+        engine = "Moteur submersible Schneider Electric 200kW",
+        pump = "Pompe submersible Grundfos SP 95-9 (95 m³/h)",
+        elements = "• 120m de tuyau PVC PN16 DN150\n• Câble électrique submersible 4x35mm²\n• Clapet anti-retour DN150\n• Collier de serrage en inox",
+        notes = "This is a sample note about the work performed and observations made during the operation. The pump was successfully installed and tested.",
+        purchaseRequest = "DA-67890",
+        quotation = "Q-112233",
+        purchaseOrder = "BC-445566",
+        invoice = "INV-778899",
+        invoiceDate = LocalDate.of(2025, 8, 10)
+    )
 
-fun generateAndSaveWithOpenPDF(
-    report: Report,
-    clientUsername: String,
-    creatorName: String,
-    farmName: String,
-    pumpName: String,
-    outputPath: Path
-) {
-    // 1. Setup Document
-    val document = Document(PageSize.A4, 30f, 30f, 30f, 30f) // A4 page with margins
-    PdfWriter.getInstance(document, FileOutputStream(outputPath.toFile()))
+    val outputPath: Path = Paths.get("debug_v2.pdf")
+
+    try {
+        generateReport(report = mockReport, outputPath = outputPath.toString())
+        println("Successfully generated PDF at: ${outputPath.toAbsolutePath()}")
+    } catch (e: Exception) {
+        println("Failed to generate PDF: ${e.message}")
+        e.printStackTrace()
+    }
+}
+
+fun generateReport(report: Report, outputPath: String) {
+    FontFactory.registerDirectories()
+
+    val document = Document(PageSize.A4)
+    val writer = PdfWriter.getInstance(document, FileOutputStream(outputPath))
+
+    writer.pageEvent = HeaderFooterPageEvent()
+
     document.open()
 
-    // 2. Add Header
-    addHeader(document, report, clientUsername, creatorName)
-
-    // 3. Add Content
-    addContent(document, report)
-
-    // 4. Add Observations & Intervenants
-    addObservationsAndOperators(document, report)
-
-    // 5. Add Executive Summary Table
-    addExecutiveSummary(document, report)
-
-    // 6. Add Footer
-    addFooter(document)
+    // Add a modern, stylized title page
+    addTitleAndHeaderInfo(document, report, creatorName = "Ahmed El Idrissi")
+    addGeneralInfoSection(
+        document,
+        report,
+        clientName = "Mohammed",
+        farmName = "Ferme Al Amal",
+        pumpName = "Pompe AIT MELLOUL"
+    )
+    addFinancialSection(document, report)
+    addTechnicalSection(document, report)
+    addNotesSection(document, report)
 
     document.close()
+    println("PDF generated successfully at: $outputPath")
 }
 
-// =================================================================================================
-// HELPER FUNCTIONS FOR SECTIONS
-// =================================================================================================
+// Define custom fonts and colors
+val robotoBold = FontFactory.getFont("Roboto-Bold", BaseFont.IDENTITY_H, true, 18f)
+val robotoRegular = FontFactory.getFont("Roboto-Regular", BaseFont.IDENTITY_H, true, 12f)
+val robotoLight = FontFactory.getFont("Roboto-Light", BaseFont.IDENTITY_H, true, 10f)
 
-private fun addHeader(document: Document, report: Report, clientUsername: String, creatorName: String) {
-    val headerTable = PdfPTable(3) // 3 columns: Logo, Title, Info
-    headerTable.widthPercentage = 100f
-    headerTable.setSpacingBefore(50f)
+val accentColor = Color(0, 102, 204) // A nice, professional blue
 
-    // Column 1: Logo
-    val logoCell = PdfPCell().apply {
-        // Here you would load your logo image
-        // val logoPath = javaClass.getResource("/logo.png")
-        // if (logoPath != null) {
-        //     val logoImage = Image.getInstance(logoPath)
-        //     logoImage.scaleToFit(50f, 50f)
-        //     this.addElement(logoImage)
-        // }
-        this.border = Rectangle.NO_BORDER
-    }
-    headerTable.addCell(logoCell)
-
-    // Column 2: Title
-    val titleCell = PdfPCell(Phrase("RAPPORT", Font(Font.HELVETICA, 20f, Font.BOLD))).apply {
-        horizontalAlignment = Element.ALIGN_CENTER
-        verticalAlignment = Element.ALIGN_MIDDLE
+private fun createLabeledCell(label: String, value: String): PdfPCell {
+    val cell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
+        setPadding(4f) // Reduced padding for compactness
     }
-    headerTable.addCell(titleCell)
+    val phrase = Phrase().apply {
+        add(Chunk("$label : ", robotoRegular.apply { color = Color.DARK_GRAY }))
+        add(Chunk(value, robotoLight))
+    }
+    cell.addElement(phrase)
+    return cell
+}
 
-    // Column 3: Info
-    val infoTable = PdfPTable(1).apply {
+// Header and Footer using PdfPageEventHelper
+class HeaderFooterPageEvent : PdfPageEventHelper() {
+    override fun onEndPage(writer: PdfWriter, document: Document) {
+        val contentByte = writer.directContent
+
+        val footerTable = PdfPTable(1).apply {
+            widthPercentage = 100f // We'll let the table span the full width to keep it simple
+            defaultCell.border = Rectangle.NO_BORDER
+            defaultCell.setPadding(5f)
+            defaultCell.verticalAlignment = Element.ALIGN_MIDDLE
+            defaultCell.horizontalAlignment = Element.ALIGN_CENTER
+        }
+
+        /*
+        val firstLineParagraph = Paragraph(
+            "355, Av. Al Mouquaouama, Bloc B, 80150, AIT MELLOUL | Tél: 05.28.24.65.64 - Fax: 05.28.24.65.50 - Email: magrinov@gmail.com",
+            robotoLight.apply { size = 8f; color = Color.BLACK }
+        ).apply {
+            setAlignment(Element.ALIGN_CENTER)
+            setSpacingAfter(2f)
+        }
+         */
+
+        val firstLineParagraph = Paragraph(
+            "355, Av. Al Mouquaouama, Bloc B, 80150, AIT MELLOUL | Tél: 05.28.24.65.64 - Fax: 05.28.24.65.50",
+            robotoLight.apply { size = 9f; color = Color.BLACK }
+        ).apply {
+            setAlignment(Element.ALIGN_CENTER)
+            setSpacingAfter(2f)
+        }
+
+        /*
+        val secondLineParagraph = Paragraph(
+            "C.N.S.S: 8907670 - R.C: 8089 Inzegane - I.F: 40435556 - Patente: 49810052 - ICE: 001446940000049",
+            robotoLight.apply { size = 8f; color = Color.BLACK }
+        ).apply {
+            setAlignment(Element.ALIGN_CENTER)
+        }
+         */
+
+        val footerCell = PdfPCell().apply {
+            border = Rectangle.NO_BORDER
+            horizontalAlignment = Element.ALIGN_CENTER
+            verticalAlignment = Element.ALIGN_MIDDLE
+            addElement(firstLineParagraph)
+            //addElement(secondLineParagraph)
+        }
+
+        footerTable.addCell(footerCell)
+
+        footerTable.setTotalWidth(document.right() - document.left())
+
+        val footerYPosition = document.bottomMargin() + 10f
+
+        footerTable.writeSelectedRows(
+            0, -1,
+            document.leftMargin(),
+            footerYPosition,
+            contentByte
+        )
+    }
+}
+
+// Title Page
+private fun addTitleAndHeaderInfo(document: Document, report: Report, creatorName: String) {
+    val titleTable = PdfPTable(2).apply {
         widthPercentage = 100f
+        setSpacingAfter(10f)
+        defaultCell.border = Rectangle.NO_BORDER
     }
-    infoTable.addCell(createBorderedCell("Bon d'exécution N°: ${report.executionOrder}"))
-    infoTable.addCell(createBorderedCell("Date de demande: ${report.requestDate.format(FORMATTER)}"))
-    infoTable.addCell(createBorderedCell("Débit des travaux: ${report.workFinishDate.format(FORMATTER)}"))
-    infoTable.addCell(createBorderedCell("Client: $clientUsername"))
-    infoTable.addCell(createBorderedCell("Demandeur: $creatorName"))
 
-    val infoCell = PdfPCell(infoTable).apply {
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-    }
-    headerTable.addCell(infoCell)
-
-    document.add(headerTable)
-}
-
-private fun addContent(document: Document, report: Report) {
-    val contentTable = PdfPTable(2) // 2 columns: tables and image
-    contentTable.widthPercentage = 100f
-    contentTable.setSpacingBefore(20f)
-    contentTable.setTotalWidth(floatArrayOf(60f, 40f))
-
-    // Column 1: Technical Tables
-    val technicalTablesCell = PdfPCell().apply {
+    val titleCell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
+        addElement(Paragraph("RAPPORT D'INTERVENTION", robotoBold.apply { size = 16f; setColor(accentColor) }))
+        addElement(Paragraph("Rapport N° : ${report.reportId}", robotoRegular.apply { size = 10f }))
+    }
+    titleTable.addCell(titleCell)
 
-        val designationTable = PdfPTable(4).apply {
-            widthPercentage = 100f
-            setSpacingBefore(10f)
+    val detailsCell = PdfPCell().apply {
+        border = Rectangle.NO_BORDER
+        horizontalAlignment = Element.ALIGN_RIGHT
+        addElement(
+            Paragraph("Date : ${LocalDate.now()}", robotoRegular.apply { size = 10f })
+                .apply { setAlignment(Element.ALIGN_RIGHT) }
+        )
+        addElement(
+            Paragraph("Créé par : $creatorName", robotoRegular.apply { size = 10f })
+                .apply { setAlignment(Element.ALIGN_RIGHT) }
+        )
+        addElement(
+            Paragraph(
+                "Période des travaux : ${report.workStartDate} au ${report.workFinishDate}",
+                robotoRegular.apply { size = 10f })
+                .apply { setAlignment(Element.ALIGN_RIGHT) }
+        )
+    }
+    titleTable.addCell(detailsCell)
+
+    document.add(titleTable)
+    document.add(LineSeparator())
+}
+
+private fun addGeneralInfoSection(
+    document: Document,
+    report: Report,
+    clientName: String,
+    farmName: String,
+    pumpName: String
+) {
+    document.add(Paragraph("Informations Générales", robotoBold.apply {
+        size = 12f
+        setColor(accentColor)
+    }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
+
+    val table = PdfPTable(2).apply {
+        widthPercentage = 100f
+        setSpacingBefore(5f)
+    }
+    table.addCell(createLabeledCell("Client", clientName))
+    table.addCell(createLabeledCell("Installation", farmName))
+    table.addCell(createLabeledCell("Forage", pumpName))
+    table.addCell(createLabeledCell("Ordre d'exécution", report.executionOrder.toString()))
+    table.addCell(createLabeledCell("Type d'opération", report.type.toString()))
+
+    val operatorsList = List(false, 5f)
+    report.operators.forEach { operator ->
+        operatorsList.add(ListItem("- $operator", robotoLight))
+    }
+    val operatorsCell = PdfPCell().apply {
+        border = Rectangle.NO_BORDER
+        setPadding(4f)
+        addElement(Phrase("Opérateurs : ", robotoRegular.apply { setColor(Color.DARK_GRAY) }))
+        addElement(operatorsList)
+    }
+    table.addCell(operatorsCell)
+    table.addCell(createLabeledCell("Date de la demande", report.requestDate.toString()))
+
+    document.add(table)
+}
+
+// Financial Details Section
+private fun addFinancialSection(document: Document, report: Report) {
+    document.add(Paragraph("Détails Financiers", robotoBold.apply {
+        size = 12f
+        setColor(accentColor)
+    }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
+
+    val table = PdfPTable(2).apply {
+        widthPercentage = 100f
+        setSpacingBefore(5f)
+    }
+    table.addCell(createLabeledCell("Demande d'achat", report.purchaseRequest))
+    table.addCell(createLabeledCell("Bon de commande", report.purchaseOrder))
+    table.addCell(createLabeledCell("Devis", report.quotation))
+    table.addCell(createLabeledCell("Facture", "${report.invoice} (Date: ${report.invoiceDate})"))
+
+    document.add(table)
+}
+
+// Technical Details Section
+private fun addTechnicalSection(document: Document, report: Report) {
+    document.add(Paragraph("Détails Techniques", robotoBold.apply {
+        size = 12f
+        setColor(accentColor)
+    }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
+
+    val table = PdfPTable(2).apply {
+        widthPercentage = 100f
+        setSpacingBefore(5f)
+    }
+
+    // Add smaller details first
+    table.addCell(createLabeledCell("Débit", "${report.speed} m3/min"))
+    table.addCell(createLabeledCell("Profondeur", "${report.depth} m"))
+    table.addCell(createLabeledCell("Niveau statique", "${report.staticLevel} m"))
+    table.addCell(createLabeledCell("Niveau dynamique", "${report.dynamicLevel} m"))
+    table.addCell(createLabeledCell("Calage de la pompe", "${report.pumpShimming} m"))
+
+    // Conditionally add motor and pump details
+    if (report.engine != null) {
+        table.addCell(createLabeledCell("Moteur", report.engine))
+    }
+
+    if (report.pump != null) {
+        // Use a single cell with colspan = 2 for the last item to make it a full row
+        val pumpCell = PdfPCell(createLabeledCell("Pompe", report.pump)).apply {
+            colspan = 2
+            border = Rectangle.NO_BORDER
+            setPadding(4f)
         }
-        designationTable.addCell(createBorderedHeaderCell("Désignation"))
-        designationTable.addCell(createBorderedHeaderCell("Moteur"))
-        designationTable.addCell(createBorderedHeaderCell("Pompe"))
-        designationTable.addCell(createBorderedHeaderCell("Eléments"))
+        table.addCell(pumpCell)
+    }
 
-        designationTable.addCell(createBorderedCell("Montage"))
-        designationTable.addCell(createBorderedCell(report.engine ?: "Aucun"))
-        designationTable.addCell(createBorderedCell(report.pump ?: "Aucune"))
-        designationTable.addCell(createBorderedCell(report.elements ?: "Aucuns"))
+    document.add(table)
 
-        designationTable.addCell(createBorderedCell("Démontage"))
-        designationTable.addCell(createBorderedCell(""))
-        designationTable.addCell(createBorderedCell(""))
-        designationTable.addCell(createBorderedCell(""))
+    document.add(Paragraph("Éléments utilisés", robotoRegular.apply {
+        setColor(accentColor)
+    }).apply {
+        setSpacingBefore(10f)
+    })
+    val elementsList = List(false, 5f)
 
-        this.addElement(designationTable)
+    val elementsToDisplay = report.elements ?: "N/A"
 
-        val depthTable = PdfPTable(2).apply {
-            widthPercentage = 100f
-            setSpacingBefore(10f)
+    if (elementsToDisplay == "N/A") {
+        elementsList.add(ListItem("N/A", robotoLight))
+    } else {
+        elementsToDisplay.split("\n").forEach { line ->
+            if (line.isNotBlank()) {
+                elementsList.add(ListItem(line.trim().removePrefix("•").trim(), robotoLight))
+            }
         }
-        depthTable.addCell(createBorderedCell("Profondeur (m)"))
-        depthTable.addCell(createBorderedCell(report.depth ?: ""))
-        depthTable.addCell(createBorderedCell("Niveau Statique (m)"))
-        depthTable.addCell(createBorderedCell(report.staticLevel ?: ""))
-        depthTable.addCell(createBorderedCell("Niveau Dynamique (m)"))
-        depthTable.addCell(createBorderedCell(report.dynamicLevel ?: ""))
-        depthTable.addCell(createBorderedCell("Calage de Pompe (m)"))
-        depthTable.addCell(createBorderedCell(report.pumpShimming ?: ""))
-        depthTable.addCell(createBorderedCell("Débit (m3/h)"))
-        depthTable.addCell(createBorderedCell(report.speed ?: ""))
-
-        this.addElement(depthTable)
     }
-    contentTable.addCell(technicalTablesCell)
-
-    // Column 2: Image
-    val imageCell = PdfPCell().apply {
-        horizontalAlignment = Element.ALIGN_CENTER
-        verticalAlignment = Element.ALIGN_MIDDLE
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-        // Load and add the image
-        // The image path needs to be resolved correctly.
-        // val svgDiagramPath = javaClass.getResource("/diagram.svg")
-        // if (svgDiagramPath != null) {
-        //     // OpenPDF can't directly handle SVG, you'd need to rasterize it first
-        //     val image = Image.getInstance(svgDiagramPath)
-        //     image.scaleToFit(200f, 200f)
-        //     this.addElement(image)
-        // }
-    }
-    contentTable.addCell(imageCell)
-
-    document.add(contentTable)
+    document.add(elementsList)
 }
 
-private fun addObservationsAndOperators(document: Document, report: Report) {
-    val twoColumnsTable = PdfPTable(2) // 2 columns for observations and operators
-    twoColumnsTable.widthPercentage = 100f
-    twoColumnsTable.setSpacingBefore(20f)
+// Notes Section
+private fun addNotesSection(document: Document, report: Report) {
+    document.add(Paragraph("Notes et Observations", robotoBold.apply {
+        size = 12f
+        color = accentColor
+    }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
 
-    // Observations
-    val observationsCell = PdfPCell().apply {
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-        setPadding(10f)
-        addElement(Paragraph("Travaux effectués et Observations:", Font(Font.HELVETICA, 12f, Font.BOLD)))
-        addElement(Paragraph(report.notes, Font(Font.HELVETICA, 10f, Font.NORMAL)))
+    val notesParagraph = Paragraph(report.notes, robotoLight.apply {
+        color = Color.BLACK
+    }).apply {
+        setSpacingBefore(0f)
     }
-    twoColumnsTable.addCell(observationsCell)
-
-    // Intervenants
-    val intervenantsCell = PdfPCell().apply {
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-        setPadding(10f)
-        addElement(Paragraph("Intervenants:", Font(Font.HELVETICA, 12f, Font.BOLD)))
-        addElement(Paragraph(report.operators.joinToString(" - "), Font(Font.HELVETICA, 10f, Font.NORMAL)))
-    }
-    twoColumnsTable.addCell(intervenantsCell)
-
-    document.add(twoColumnsTable)
-}
-
-private fun addExecutiveSummary(document: Document, report: Report) {
-    val summaryTable = PdfPTable(2)
-    summaryTable.widthPercentage = 100f
-    summaryTable.setSpacingBefore(20f)
-    summaryTable.addCell(createBorderedCell("Date fin des travaux"))
-    summaryTable.addCell(createBorderedCell(report.workFinishDate.format(FORMATTER)))
-    summaryTable.addCell(createBorderedCell("N°D.A"))
-    summaryTable.addCell(createBorderedCell(report.purchaseRequest))
-    summaryTable.addCell(createBorderedCell("N°Devis"))
-    summaryTable.addCell(createBorderedCell(report.quotation))
-    summaryTable.addCell(createBorderedCell("N°B.C"))
-    summaryTable.addCell(createBorderedCell(report.purchaseOrder))
-    summaryTable.addCell(createBorderedCell("N°Facture et la date"))
-    summaryTable.addCell(createBorderedCell("${report.invoice} le ${report.invoiceDate?.format(FORMATTER) ?: "Inconnu"}"))
-
-    document.add(summaryTable)
-}
-
-private fun addFooter(document: Document) {
-    val footerTable = PdfPTable(1)
-    footerTable.widthPercentage = 100f
-    footerTable.setSpacingBefore(20f)
-
-    val footerCell = createBorderedCell(
-        "355 .Av. AL Mouquaouama .Bloc B- 80150 Ait Melloul - Tél: 05.28.24.65.64 -Fax: 05.28.24.65.50 -Email: magrinov@gmail.com C.N.S.S: 8907670 -R.C: 8089 Inzegane -I.F: 40435556 -Patente: 49810052 -ICE: 001446940000049"
-    ).apply {
-        border = Rectangle.TOP
-        borderColor = BORDER_COLOR
-        horizontalAlignment = Element.ALIGN_CENTER
-        paddingTop = 10f
-    }
-    footerTable.addCell(footerCell)
-
-    document.add(footerTable)
-}
-
-// Custom cell for consistency
-private fun createBorderedCell(text: Any): PdfPCell {
-    val textAsString = text.toString() // Safely converts any object to its string representation
-    return PdfPCell(Phrase(textAsString, Font(Font.HELVETICA, 10f, Font.NORMAL))).apply {
-        horizontalAlignment = Element.ALIGN_CENTER
-        verticalAlignment = Element.ALIGN_MIDDLE
-        setPadding(5f)
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-    }
-}
-
-private fun createBorderedHeaderCell(text: String): PdfPCell {
-    return PdfPCell(Phrase(text, Font(Font.HELVETICA, 10f, Font.BOLD))).apply {
-        horizontalAlignment = Element.ALIGN_CENTER
-        verticalAlignment = Element.ALIGN_MIDDLE
-        setPadding(5f)
-        border = Rectangle.BOX
-        borderColor = BORDER_COLOR
-        backgroundColor = Color.decode("#F0F0F0") // Light gray header background
-    }
+    document.add(notesParagraph)
 }
