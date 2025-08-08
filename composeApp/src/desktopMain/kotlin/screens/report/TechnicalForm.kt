@@ -40,55 +40,66 @@ fun TechnicalForm(
     onNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = "Technique",
-        style = MaterialTheme.typography.titleSmall,
-        modifier = modifier
-    )
-    Spacer(modifier = spaceBetweenFields)
     NumberTextField(
         value = depth,
         label = "Profondeur (m)",
         onValueChange = { onDepthChange(it) },
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     NumberTextField(
         value = staticLevel,
         label = "Niveau statique (m)",
         onValueChange = { onStaticLevelChange(it) },
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     NumberTextField(
         value = dynamicLevel,
         label = "Niveau dynamique (m)",
         onValueChange = { onDynamicLevelChange(it) },
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     NumberTextField(
         value = pumpShimming,
         label = "Calage de pompe (m)",
         onValueChange = { onPumpShimmingChange(it) },
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
 
     var speedText by remember { mutableStateOf(speed?.toString() ?: "") }
+    var isSpeedError by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = speedText,
         onValueChange = { newValue ->
             speedText = newValue
-            onSpeedChange(newValue.toFloatOrNull())
+            val floatValue = newValue.toFloatOrNull()
+            isSpeedError = newValue.isNotEmpty() && floatValue == null
+            onSpeedChange(floatValue)
         },
         label = { Text("Débit (m3/h)") },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
         singleLine = true,
+        isError = isSpeedError,
+        supportingText = {
+            if (isSpeedError) {
+                Text(
+                    text = "Veuillez entrer un nombre décimal valide.",
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else {
+                // This reserves the space even when there's no error
+                Text("")
+            }
+        },
         modifier = modifier.fillMaxWidth()
     )
+
+    Spacer(modifier = spaceBetweenFields)
+
     if (type == Report.OperationType.ASSEMBLY) {
-        Spacer(modifier = spaceBetweenFields)
         OutlinedTextField(
             value = engine ?: "",
             onValueChange = {
@@ -96,6 +107,7 @@ fun TechnicalForm(
             },
             label = { Text("Moteur") },
             singleLine = true,
+            supportingText = { Text("") },
             modifier = modifier.fillMaxWidth()
         )
         Spacer(modifier = spaceBetweenFields)
@@ -106,6 +118,7 @@ fun TechnicalForm(
             },
             label = { Text("Pompe") },
             singleLine = true,
+            supportingText = { Text("") },
             modifier = modifier.fillMaxWidth()
         )
         Spacer(modifier = spaceBetweenFields)
@@ -116,18 +129,19 @@ fun TechnicalForm(
             },
             label = { Text("Élements") },
             singleLine = true,
+            supportingText = { Text("") },
             modifier = modifier.fillMaxWidth()
         )
+        Spacer(modifier = spaceBetweenFields)
     }
-    Spacer(modifier = spaceBetweenFields)
-    LargeTextBox(
+    NotesTextBox(
         notes = notes,
         onNotesChange = onNotesChange
     )
 }
 
 @Composable
-fun LargeTextBox(
+fun NotesTextBox(
     notes: String?,
     onNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -139,6 +153,7 @@ fun LargeTextBox(
         modifier = modifier
             .fillMaxWidth()
             .height(160.dp),
+        supportingText = { Text("") },
         textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
     )
 }
