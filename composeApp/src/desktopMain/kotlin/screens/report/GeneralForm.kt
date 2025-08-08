@@ -1,23 +1,20 @@
 package screens.report
 
-import Logger
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import models.Client
 import models.Report
 import screens.spaceBetweenFields
 import ui.AutoCompleteTextField
 import ui.DatePickerAndTextField
+import ui.FlexibleAutoCompleteTextField
 import ui.NumberTextField
 import java.time.LocalDate
 
@@ -27,6 +24,8 @@ fun GeneralForm(
     onExecutionOrderChange: (Long?) -> Unit,
     requestDate: LocalDate?,
     onRequestDateChange: (LocalDate?) -> Unit,
+    workStartDate: LocalDate?,
+    onWorkStartDateChange: (LocalDate?) -> Unit,
     workFinishDate: LocalDate?,
     onWorkFinishDateChange: (LocalDate?) -> Unit,
     clients: List<Client>,
@@ -46,11 +45,6 @@ fun GeneralForm(
     onTypeSelected: (Report.OperationType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = "Général",
-        style = MaterialTheme.typography.titleSmall,
-        modifier = modifier.padding(bottom = 16.dp)
-    )
     NumberTextField(
         value = executionOrder,
         label = "Bon d'exécution",
@@ -64,52 +58,57 @@ fun GeneralForm(
         modifier = modifier.fillMaxWidth()
     )
     DatePickerAndTextField(
+        value = workStartDate,
+        label = "Date de début des travaux",
+        onValueChange = { onWorkStartDateChange(it) },
+        modifier = modifier.fillMaxWidth()
+    )
+    DatePickerAndTextField(
         value = workFinishDate,
-        label = "Date de débit des travaux",
+        label = "Date de fin des travaux",
         onValueChange = { onWorkFinishDateChange(it) },
         modifier = modifier.fillMaxWidth()
     )
     AutoCompleteTextField(
         label = "Client",
-        value = selectedClient?.name,
-        source = clients,
-        onSelect = { client ->
-            Logger.debug("[GeneralForm] Selected ${client.name} client")
+        items = clients,
+        selectedItem = selectedClient,
+        onSelectedItemChange = { client ->
             onSelectedClientChange(client)
+            onSelectedFarmNameChange(null) // Reset farm and pump when client changes
+            onSelectedPumpNameChange(null)
         },
         displayText = { client -> client.name },
-        onValueChange = { },
-        modifier = modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
     selectedClient?.let {
         val farmNames = fetchFarmNames(selectedClient)
-        AutoCompleteTextField(
+        FlexibleAutoCompleteTextField(
             label = "Installation",
             value = selectedFarmName,
             source = farmNames,
-            onSelect = { },
+            onSelect = { farmName ->
+                onSelectedFarmNameChange(farmName)
+                onSelectedPumpNameChange(null)
+            },
             onValueChange = { farmName ->
-                Logger.debug("[GeneralForm] Value changed to $farmName farm")
                 onSelectedFarmNameChange(farmName)
             },
-            displayText = { farmName -> farmName },
+            displayText = { it },
             modifier = modifier.fillMaxWidth()
         )
     }
     Spacer(modifier = spaceBetweenFields)
-    selectedFarmName?.let {
-        val pumpNames = fetchPumpNames(it)
-        AutoCompleteTextField(
+    if (!selectedFarmName.isNullOrBlank()) {
+        val pumpNames = fetchPumpNames(selectedFarmName)
+        FlexibleAutoCompleteTextField(
             label = "Pompe",
             value = selectedPumpName,
             source = pumpNames,
-            onSelect = { },
-            onValueChange = { pumpName ->
-                Logger.debug("[GeneralForm] Value changed to $pumpName pump")
-                onSelectedPumpNameChange(pumpName)
-            },
-            displayText = { pumpName -> pumpName },
+            onSelect = { pumpName -> onSelectedPumpNameChange(pumpName) },
+            onValueChange = { pumpName -> onSelectedPumpNameChange(pumpName) },
+            displayText = { it },
             modifier = modifier.fillMaxWidth()
         )
     }
@@ -129,41 +128,42 @@ fun GeneralForm(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OperationTypeDropdown(
     selectedType: Report.OperationType?,
     onTypeSelected: (Report.OperationType) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-
     Box(modifier = modifier) {
-        OutlinedTextField(
-            value = selectedType?.beautiful ?: "Type d'opération",
-            onValueChange = {},
-            modifier = Modifier.fillMaxWidth().clickable { expanded = true },
-            readOnly = true,
-            trailingIcon = {
-                Icon(
-                    Icons.Filled.ArrowDropDown,
-                    contentDescription = null,
-                    Modifier.clickable { expanded = true }
-                )
-            }
-        )
-
-        DropdownMenu(
+        ExposedDropdownMenuBox(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onExpandedChange = { expanded = !expanded }
         ) {
-            Report.OperationType.entries.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(text = type.beautiful) },
-                    onClick = {
-                        onTypeSelected(type)
-                        expanded = false
-                    }
-                )
+            OutlinedTextField(
+                value = selectedType?.beautiful ?: "Sélectionner un type",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Type d'opération") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                Report.OperationType.entries.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(type.beautiful) },
+                        onClick = {
+                            onTypeSelected(type)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -178,91 +178,35 @@ fun OperatorForm(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        Card(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Intervenants",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
-
-                operators.forEachIndexed { index, operator ->
-                    OperatorTextField(
-                        operator = operator,
-                        onValueChange = { newOperator ->
-                            onOperatorChange(index, newOperator)
-                        },
-                        onRemoveClick = {
-                            onOperatorRemove(index)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (index < operators.size - 1) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Text(
-                        text = "Ajouter un intervenant",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.clickable { onOperatorAdd() }
-                    )
-                }
+            Text(text = "Opérateurs", style = MaterialTheme.typography.titleLarge)
+            IconButton(onClick = onOperatorAdd) {
+                Icon(Icons.Default.Add, contentDescription = "Ajouter un opérateur")
             }
         }
-    }
-}
 
-@Composable
-fun OperatorTextField(
-    operator: String,
-    onValueChange: (String) -> Unit,
-    onRemoveClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            value = operator,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp)
-                .heightIn(min = 40.dp),
-            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-            singleLine = true,
-            shape = MaterialTheme.shapes.small
-        )
-        IconButton(
-            onClick = onRemoveClick,
-            modifier = Modifier.size(24.dp)
-        ) {
-            Icon(
-                Icons.Outlined.Delete,
-                contentDescription = "Remove Operator",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        operators.forEachIndexed { index, operator ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = operator,
+                    onValueChange = { onOperatorChange(index, it) },
+                    label = { Text("Opérateur #${index + 1}") },
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { onOperatorRemove(index) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer l'opérateur")
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

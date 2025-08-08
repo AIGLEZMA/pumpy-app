@@ -39,7 +39,6 @@ fun NumberTextField(
         },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         singleLine = true,
-
         modifier = modifier.fillMaxWidth()
     )
 }

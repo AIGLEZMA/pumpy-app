@@ -1,26 +1,75 @@
 package ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> AutoCompleteTextField(
+    label: String,
+    items: List<T>,
+    selectedItem: T?,
+    onSelectedItemChange: (T?) -> Unit,
+    displayText: (T) -> String,
+    modifier: Modifier = Modifier,
+) {
+    var expand by remember { mutableStateOf(false) }
+    var text by remember { mutableStateOf(selectedItem?.let(displayText) ?: "") }
+
+    LaunchedEffect(selectedItem) {
+        val newText = selectedItem?.let(displayText) ?: ""
+        if (text != newText) {
+            text = newText
+        }
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expand,
+        onExpandedChange = { expand = !expand },
+    ) {
+        OutlinedTextField(
+            value = text,
+            label = { Text(label) },
+            onValueChange = { newValue ->
+                text = newValue
+                expand = true
+                // If the user clears the text, treat the item as unselected
+                if (newValue.isEmpty()) {
+                    onSelectedItemChange(null)
+                }
+            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expand) },
+            modifier = modifier.menuAnchor(MenuAnchorType.PrimaryEditable),
+            singleLine = true
+        )
+
+        val filteredItems = remember(text, items) {
+            items.filter { displayText(it).contains(text, ignoreCase = true) }
+        }
+
+        ExposedDropdownMenu(
+            expanded = expand,
+            onDismissRequest = { expand = false },
+        ) {
+            filteredItems.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(displayText(item)) },
+                    onClick = {
+                        text = displayText(item)
+                        onSelectedItemChange(item)
+                        expand = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> FlexibleAutoCompleteTextField(
     label: String,
     value: String?,
     source: List<T>,
@@ -29,81 +78,49 @@ fun <T> AutoCompleteTextField(
     displayText: (T) -> String,
     modifier: Modifier = Modifier
 ) {
-    var category by remember { mutableStateOf(value ?: "") }
-    var textFieldSize by remember { mutableStateOf(Size.Zero) }
-    var expanded by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
+    var expand by remember { mutableStateOf(false) }
+    var text by remember(value) { mutableStateOf(value ?: "") }
 
-    Column(
-        modifier = modifier.fillMaxWidth()
-            .clickable(interactionSource = interactionSource, indication = null, onClick = {
-                expanded = false
-            })
+    ExposedDropdownMenuBox(
+        expanded = expand,
+        onExpandedChange = { expand = !expand },
+        modifier = modifier
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth()
-                        .onGloballyPositioned { coordinates -> textFieldSize = coordinates.size.toSize() },
-                    value = category,
-                    onValueChange = { newValue ->
-                        category = newValue
-                        expanded = true
-                        onValueChange(newValue)
-                    },
-                    placeholder = { Text(label) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
-                    singleLine = true,
-                    trailingIcon = {
-                        IconButton(onClick = { expanded = !expanded }) {
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Open menu"
-                            )
-                        }
-                    })
-            }
-            AnimatedVisibility(visible = expanded) {
-                Card(
-                    modifier = Modifier.width(textFieldSize.width.dp)
-                ) {
-                    // TODO: add scroll in case there are too many entries
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = 150.dp),
-                    ) {
-                        val filteredSource = if (category.isNotEmpty()) {
-                            source.filter {
-                                displayText(it).lowercase().contains(category.lowercase())
-                                        || displayText(it).lowercase().contains("others")
-                            }.sortedBy(displayText)
-                        } else {
-                            source.sortedBy(displayText)
-                        }
+        OutlinedTextField(
+            value = text,
+            label = { Text(label) },
+            onValueChange = { newValue ->
+                text = newValue
+                expand = true
+                onValueChange(newValue)
+            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expand) },
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable).fillMaxWidth(),
+            singleLine = true
+        )
 
-                        items(filteredSource) { item ->
-                            ItemsCategory(
-                                title = displayText(item)
-                            ) { title ->
-                                category = displayText(item)
-                                expanded = false
-                                onSelect(item)
-                                onValueChange(category) // Call onValueChange when an item is selected
-                            }
-                        }
-                    }
-                }
+        val filteredSource = remember(text, source) {
+            if (text.isNotEmpty()) {
+                source.filter { displayText(it).contains(text, ignoreCase = true) }
+            } else {
+                source
             }
         }
-    }
-}
 
-@Composable
-fun ItemsCategory(
-    title: String, onSelect: (String) -> Unit
-) {
-    Row(modifier = Modifier.fillMaxWidth().clickable {
-        onSelect(title)
-    }.padding(10.dp)) {
-        Text(text = title)
+        ExposedDropdownMenu(
+            expanded = expand,
+            onDismissRequest = { expand = false },
+        ) {
+            filteredSource.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(displayText(item)) },
+                    onClick = {
+                        onSelect(item) // Trigger the onSelect lambda with the chosen item
+                        text = displayText(item)
+                        expand = false
+                    }
+                )
+            }
+        }
     }
 }
