@@ -380,7 +380,24 @@ class ReportsScreen : Screen {
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Débit de travaux:",
+                                            text = "Début des travaux:",
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                        Text(
+                                            report.workStartDate.format(
+                                                DateTimeFormatter.ofPattern(
+                                                    "dd MMM yyyy",
+                                                    Locale.FRENCH
+                                                )
+                                            )
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Fin des travaux:",
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                                         )
                                         Text(
