@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,7 +18,6 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import models.Client
 import models.Report
 import models.Report.OperationType
 import screenmodels.AddEditReportScreenModel
@@ -56,124 +54,183 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                val scrollState = rememberScrollState()
                 Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(400.dp)
-                        .verticalScroll(scrollState)
-                        .padding(16.dp)
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(45.dp))
-                    Title(
-                        isEditMode = state.isEditMode,
-                        reportId = report?.reportId
-                    )
-                    Spacer(modifier = Modifier.height(45.dp))
-                    println("Available clients: ${clients.map { it.clientId to it.name }}")
-                    println("Selected client from screenModel: ${screenModel.selectedClient}")
+                    // Title at the top
+                    Title(isEditMode = state.isEditMode, reportId = report?.reportId)
 
-                    val selectedClient: Client? = remember(clients, screenModel.selectedClient) {
-                        val screenClientId = screenModel.selectedClient?.clientId
-                        clients.firstOrNull { it.clientId == screenClientId }
-                    }
-                    LaunchedEffect(selectedClient) {
-                        if (selectedClient != null && selectedClient != screenModel.selectedClient) {
-                            Logger.debug("Updating selectedClient in screenModel to: ${selectedClient.name}")
-                            screenModel.selectedClient = selectedClient
-                        }
-                    }
-                    GeneralForm(
-                        executionOrder = screenModel.executionOrder,
-                        onExecutionOrderChange = { screenModel.executionOrder = it },
-                        requestDate = screenModel.requestDate,
-                        onRequestDateChange = {
-                            Logger.debug("[Report] @ Date Old: ${screenModel.requestDate} | New: $it")
-                            screenModel.requestDate = it
-                        },
-                        workFinishDate = screenModel.workFinishDate,
-                        onWorkFinishDateChange = { screenModel.workFinishDate = it },
-                        clients = clients,
-                        selectedClient = selectedClient.also { client -> println("DEBUG: $client") },
-                        fetchFarmNames = { client -> reportsScreenModel.fetchFarmNames(client) },
-                        onSelectedClientChange = {
-                            screenModel.selectedClient = it
-                        },
-                        selectedFarmName = screenModel.selectedFarmName,
-                        onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
-                        fetchPumpNames = { farmName -> reportsScreenModel.fetchPumpNames(farmName) },
-                        selectedPumpName = screenModel.selectedPumpName,
-                        onSelectedPumpNameChange = { screenModel.selectedPumpName = it },
-                        operators = screenModel.operators,
-                        onOperatorAdd = { screenModel.addOperator() },
-                        onOperatorRemove = { screenModel.removeOperator(it) },
-                        onOperatorChange = { i, s -> screenModel.updateOperator(i, s) },
-                        selectedType = screenModel.type,
-                        onTypeSelected = { screenModel.type = it }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    TechnicalForm(
-                        depth = screenModel.depth,
-                        onDepthChange = { screenModel.depth = it },
-                        staticLevel = screenModel.staticLevel,
-                        onStaticLevelChange = { screenModel.staticLevel = it },
-                        dynamicLevel = screenModel.dynamicLevel,
-                        onDynamicLevelChange = { screenModel.dynamicLevel = it },
-                        pumpShimming = screenModel.pumpShimming,
-                        onPumpShimmingChange = { screenModel.pumpShimming = it },
-                        speed = screenModel.speed,
-                        onSpeedChange = { screenModel.speed = it },
-                        type = screenModel.type ?: OperationType.ASSEMBLY,
-                        engine = screenModel.engine,
-                        onEngineChange = { screenModel.engine = it },
-                        pump = screenModel.pump,
-                        onPumpChange = { screenModel.pump = it },
-                        elements = screenModel.elements,
-                        onElementsChange = { screenModel.elements = it },
-                        notes = screenModel.notes,
-                        onNotesChange = { screenModel.notes = it }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    ExecutiveForm(
-                        purchaseRequest = screenModel.purchaseRequest,
-                        onPurchaseRequestChange = { screenModel.purchaseRequest = it },
-                        quotation = screenModel.quotation,
-                        onQuotationChange = { screenModel.quotation = it },
-                        purchaseOrder = screenModel.purchaseOrder,
-                        onPurchaseOrderChange = { screenModel.purchaseOrder = it },
-                        invoice = screenModel.invoice,
-                        onInvoiceChange = { screenModel.invoice = it },
-                        invoiceDate = screenModel.invoiceDate,
-                        onInvoiceDateChange = { screenModel.invoiceDate = it }
-                    )
-                    ActionButtons(
-                        saveReport = {
-                            val loggedInUser = loginScreenModel.loginState.user
-                            if (loggedInUser == null) {
-                                Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
-                                return@ActionButtons
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Three forms in a row, each with its own scrollbar
+                    Row(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp), // Increased space between columns
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // GeneralForm Column with Sticky Title
+                        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                            val scrollStateGeneral = rememberScrollState()
+                            Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
+                                Text(
+                                    text = "Informations Générales",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollStateGeneral)
+                                ) {
+                                    GeneralForm(
+                                        executionOrder = screenModel.executionOrder,
+                                        onExecutionOrderChange = { screenModel.executionOrder = it },
+                                        requestDate = screenModel.requestDate,
+                                        onRequestDateChange = {
+                                            Logger.debug("[Report] @ Date Old: ${screenModel.requestDate} | New: $it")
+                                            screenModel.requestDate = it
+                                        },
+                                        workStartDate = screenModel.workStartDate,
+                                        onWorkStartDateChange = { screenModel.workStartDate = it },
+                                        workFinishDate = screenModel.workFinishDate,
+                                        onWorkFinishDateChange = { screenModel.workFinishDate = it },
+                                        clients = clients,
+                                        selectedClient = screenModel.selectedClient,
+                                        fetchFarmNames = { client -> reportsScreenModel.fetchFarmNames(client) },
+                                        onSelectedClientChange = {
+                                            screenModel.selectedClient = it
+                                        },
+                                        selectedFarmName = screenModel.selectedFarmName,
+                                        onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
+                                        fetchPumpNames = { farmName -> reportsScreenModel.fetchPumpNames(farmName) },
+                                        selectedPumpName = screenModel.selectedPumpName,
+                                        onSelectedPumpNameChange = { screenModel.selectedPumpName = it },
+                                        operators = screenModel.operators,
+                                        onOperatorAdd = { screenModel.addOperator() },
+                                        onOperatorRemove = { screenModel.removeOperator(it) },
+                                        onOperatorChange = { i, s -> screenModel.updateOperator(i, s) },
+                                        selectedType = screenModel.type,
+                                        onTypeSelected = { screenModel.type = it }
+                                    )
+                                }
                             }
-                            screenModel.saveReport(loggedInUser)
-                        },
-                        onCancel = { navigator.pop() }
-                    )
-                    when {
-                        state.isSaved -> {
-                            LaunchedEffect(Unit) {
-                                navigator.pop()
-                            }
+                            VerticalScrollbar(
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                                adapter = rememberScrollbarAdapter(scrollStateGeneral)
+                            )
                         }
 
-                        state.errorMessage != null -> {
-                            Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
+                        // TechnicalForm Column with Sticky Title
+                        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                            val scrollStateTechnical = rememberScrollState()
+                            Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
+                                Text(
+                                    text = "Informations Techniques",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollStateTechnical)
+                                ) {
+                                    TechnicalForm(
+                                        depth = screenModel.depth,
+                                        onDepthChange = { screenModel.depth = it },
+                                        staticLevel = screenModel.staticLevel,
+                                        onStaticLevelChange = { screenModel.staticLevel = it },
+                                        dynamicLevel = screenModel.dynamicLevel,
+                                        onDynamicLevelChange = { screenModel.dynamicLevel = it },
+                                        pumpShimming = screenModel.pumpShimming,
+                                        onPumpShimmingChange = { screenModel.pumpShimming = it },
+                                        speed = screenModel.speed,
+                                        onSpeedChange = { screenModel.speed = it },
+                                        type = screenModel.type ?: OperationType.ASSEMBLY,
+                                        engine = screenModel.engine,
+                                        onEngineChange = { screenModel.engine = it },
+                                        pump = screenModel.pump,
+                                        onPumpChange = { screenModel.pump = it },
+                                        elements = screenModel.elements,
+                                        onElementsChange = { screenModel.elements = it },
+                                        notes = screenModel.notes,
+                                        onNotesChange = { screenModel.notes = it }
+                                    )
+                                }
+                            }
+                            VerticalScrollbar(
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                                adapter = rememberScrollbarAdapter(scrollStateTechnical)
+                            )
+                        }
+
+                        // ExecutiveForm Column with Sticky Title
+                        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                            val scrollStateExecutive = rememberScrollState()
+                            Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
+                                Text(
+                                    text = "Informations Exécutives",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollStateExecutive)
+                                ) {
+                                    ExecutiveForm(
+                                        purchaseRequest = screenModel.purchaseRequest,
+                                        onPurchaseRequestChange = { screenModel.purchaseRequest = it },
+                                        quotation = screenModel.quotation,
+                                        onQuotationChange = { screenModel.quotation = it },
+                                        purchaseOrder = screenModel.purchaseOrder,
+                                        onPurchaseOrderChange = { screenModel.purchaseOrder = it },
+                                        invoice = screenModel.invoice,
+                                        onInvoiceChange = { screenModel.invoice = it },
+                                        invoiceDate = screenModel.invoiceDate,
+                                        onInvoiceDateChange = { screenModel.invoiceDate = it }
+                                    )
+                                }
+                            }
+                            VerticalScrollbar(
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                                adapter = rememberScrollbarAdapter(scrollStateExecutive)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Action buttons at the bottom
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        ActionButtons(
+                            saveReport = {
+                                val loggedInUser = loginScreenModel.loginState.user
+                                if (loggedInUser == null) {
+                                    Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
+                                    return@ActionButtons
+                                }
+                                screenModel.saveReport(loggedInUser)
+                            },
+                            onCancel = { navigator.pop() }
+                        )
+                    }
+
+                    // Error message at the bottom
+                    if (state.errorMessage != null) {
+                        Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
+                    }
+
+                    // Saved state logic
+                    if (state.isSaved) {
+                        LaunchedEffect(Unit) {
+                            navigator.pop()
                         }
                     }
                 }
-                VerticalScrollbar(
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                        .fillMaxHeight(),
-                    adapter = rememberScrollbarAdapter(scrollState)
-                )
             }
         }
     }
@@ -184,9 +241,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         reportId: Long?,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(400.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -208,20 +263,20 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         modifier: Modifier = Modifier,
     ) {
         Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
                 onClick = onCancel,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.width(150.dp)
             ) {
                 Text(text = "Annuler")
             }
-            Spacer(modifier = Modifier.width(8.dp))
             OutlinedButton(
                 onClick = saveReport,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.width(150.dp)
             ) {
                 Text(text = "Enregister")
             }

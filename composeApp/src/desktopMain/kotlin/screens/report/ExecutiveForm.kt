@@ -1,13 +1,10 @@
 package screens.report
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import ui.DatePickerAndTextField
 import java.time.LocalDate
 
@@ -25,32 +22,31 @@ fun ExecutiveForm(
     onInvoiceDateChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = "Executive",
-        style = MaterialTheme.typography.titleSmall,
-        modifier = modifier.padding(bottom = 16.dp)
-    )
     OutlinedTextField(
         value = purchaseRequest ?: "",
         label = { Text("Numéro D.A") },
+        singleLine = true,
         onValueChange = { onPurchaseRequestChange(it) },
         modifier = modifier.fillMaxWidth()
     )
     OutlinedTextField(
         value = quotation ?: "",
         label = { Text("Numéro de Devis") },
+        singleLine = true,
         onValueChange = { onQuotationChange(it) },
         modifier = modifier.fillMaxWidth()
     )
     OutlinedTextField(
         value = purchaseOrder ?: "",
         label = { Text("Bon de commande") },
+        singleLine = true,
         onValueChange = { onPurchaseOrderChange(it) },
         modifier = modifier.fillMaxWidth()
     )
     OutlinedTextField(
         value = invoice ?: "",
         label = { Text("Facture") },
+        singleLine = true,
         onValueChange = { onInvoiceChange(it) },
         modifier = modifier.fillMaxWidth()
     )
