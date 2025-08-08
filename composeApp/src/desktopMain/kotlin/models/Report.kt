@@ -24,6 +24,7 @@ data class Report(
     val creatorId: Long,
     val executionOrder: Long,
     val requestDate: LocalDate,
+    val workStartDate: LocalDate,
     val workFinishDate: LocalDate,
     val pumpOwnerId: Long,
     val operators: List<String>,

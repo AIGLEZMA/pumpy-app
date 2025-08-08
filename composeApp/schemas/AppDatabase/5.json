@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "9dc9d1609ad407c6ca8df192b6c744c5",
+    "identityHash": "a436d0c65c6c47b08707541748f9f1e0",
     "entities": [
       {
         "tableName": "user",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `isAdmin` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `isAdmin` INTEGER NOT NULL, `company` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -30,6 +30,12 @@
             "fieldPath": "isAdmin",
             "columnName": "isAdmin",
             "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "company",
+            "columnName": "company",
+            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -164,7 +170,7 @@
       },
       {
         "tableName": "report",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reportId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `creatorId` INTEGER NOT NULL, `executionOrder` INTEGER NOT NULL, `requestDate` TEXT NOT NULL, `workFinishDate` TEXT NOT NULL, `pumpOwnerId` INTEGER NOT NULL, `operators` TEXT NOT NULL, `type` TEXT NOT NULL, `depth` INTEGER, `staticLevel` INTEGER, `dynamicLevel` INTEGER, `pumpShimming` INTEGER, `speed` REAL, `engine` TEXT, `pump` TEXT, `elements` TEXT, `notes` TEXT, `purchaseRequest` TEXT NOT NULL, `quotation` TEXT NOT NULL, `purchaseOrder` TEXT NOT NULL, `invoice` TEXT NOT NULL, `invoiceDate` TEXT, FOREIGN KEY(`pumpOwnerId`) REFERENCES `pump`(`pumpId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`creatorId`) REFERENCES `user`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reportId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `creatorId` INTEGER NOT NULL, `executionOrder` INTEGER NOT NULL, `requestDate` TEXT NOT NULL, `workStartDate` TEXT NOT NULL, `workFinishDate` TEXT NOT NULL, `pumpOwnerId` INTEGER NOT NULL, `operators` TEXT NOT NULL, `type` TEXT NOT NULL, `depth` INTEGER, `staticLevel` INTEGER, `dynamicLevel` INTEGER, `pumpShimming` INTEGER, `speed` REAL, `engine` TEXT, `pump` TEXT, `elements` TEXT, `notes` TEXT, `purchaseRequest` TEXT NOT NULL, `quotation` TEXT NOT NULL, `purchaseOrder` TEXT NOT NULL, `invoice` TEXT NOT NULL, `invoiceDate` TEXT, FOREIGN KEY(`pumpOwnerId`) REFERENCES `pump`(`pumpId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`creatorId`) REFERENCES `user`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "reportId",
@@ -187,6 +193,12 @@
           {
             "fieldPath": "requestDate",
             "columnName": "requestDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workStartDate",
+            "columnName": "workStartDate",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -323,7 +335,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9dc9d1609ad407c6ca8df192b6c744c5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a436d0c65c6c47b08707541748f9f1e0')"
     ]
   }
 }

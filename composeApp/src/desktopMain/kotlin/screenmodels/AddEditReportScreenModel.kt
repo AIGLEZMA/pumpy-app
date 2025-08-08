@@ -18,6 +18,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
 
     var executionOrder by mutableStateOf(report?.executionOrder)
     var requestDate by mutableStateOf(report?.requestDate)
+    var workStartDate by mutableStateOf(report?.workStartDate)
     var workFinishDate by mutableStateOf(report?.workFinishDate)
     var operators by mutableStateOf(report?.operators?.toMutableStateList() ?: mutableStateListOf())
     var type by mutableStateOf(report?.type)
@@ -67,7 +68,8 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
             val validationErrors = listOf(
                 executionOrder to "Le bon d'exécution doit être rempli",
                 requestDate to "La date de demande doit être remplie",
-                workFinishDate to "La date de débit des travaux doit être remplie",
+                workStartDate to "La date de début des travaux doit être remplie",
+                workFinishDate to "La date de fin des travaux doit être remplie",
                 type to "Le type doit être sélectionné",
                 selectedClient to "Le client doit être sélectionné",
                 purchaseRequest to "Le numéro de demande d'achat doit être rempli",
@@ -110,6 +112,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 creatorId = loggedInUser.id,
                 executionOrder = executionOrder!!.toLong(),
                 requestDate = requestDate!!,
+                workStartDate = workStartDate!!,
                 workFinishDate = workFinishDate!!,
                 pumpOwnerId = pumpId,
                 operators = operators,
