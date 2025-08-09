@@ -29,7 +29,6 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
 
             implementation(libs.voyager.navigator)
-            implementation(libs.voyager.transitions)
             implementation(libs.voyager.screenmodel)
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
@@ -43,7 +42,6 @@ kotlin {
             implementation(libs.coroutines.swing)
 
             implementation("com.github.librepdf:openpdf:2.2.4")
-            implementation("com.github.librepdf:openpdf-kotlin:2.2.4")
             implementation("com.github.librepdf:openpdf-fonts-extra:2.2.4")
         }
     }
@@ -56,7 +54,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe)
             packageName = "Magrinov"
-            version = "1.0.0"
+            version = "2.0.0"
             vendor = "Magrinov"
 
             windows {
