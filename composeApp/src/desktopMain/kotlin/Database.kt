@@ -6,6 +6,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import models.*
+import kotlin.io.path.Path
 
 @Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 5)
 @TypeConverters(Converters::class)
@@ -23,7 +24,7 @@ object DatabaseProvider {
     @OptIn(DelicateCoroutinesApi::class)
     fun getDatabase(): AppDatabase {
         return instance ?: synchronized(this) {
-            val databasePath = getApplicationDataPath()
+            val databasePath = Path(getApplicationDataPath(), "app_database.db").toString()
             Logger.debug("[Database] Database path: $databasePath")
             val newInstance = Room.databaseBuilder<AppDatabase>(
                 name = databasePath

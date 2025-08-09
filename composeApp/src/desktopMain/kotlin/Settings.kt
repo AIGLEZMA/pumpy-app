@@ -11,8 +11,7 @@ object SettingsManager {
     private val json = Json { prettyPrint = true }
 
     private val settingsFile: File by lazy {
-        val appDataDir = File(getApplicationDataPath()).parentFile
-        if (!appDataDir.exists()) appDataDir.mkdirs()
+        val appDataDir = File(getApplicationDataPath())
         File(appDataDir, "settings.json")
     }
 

@@ -88,5 +88,5 @@ fun getApplicationDataPath(): String {
         appDataDir.mkdirs()
     }
 
-    return Paths.get(appDataDir.absolutePath, "app_database.db").toString()
+    return appDataDir.absolutePath
 }
