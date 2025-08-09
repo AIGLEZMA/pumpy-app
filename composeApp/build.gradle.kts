@@ -55,6 +55,7 @@ compose.desktop {
     application {
         mainClass = "MainKt"
 
+        buildTypes.release.proguard.isEnabled = false
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe)
             packageName = "Magrinov"
