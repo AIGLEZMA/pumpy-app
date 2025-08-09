@@ -111,13 +111,14 @@ class ReportsScreen : Screen {
                             onReportEditClick = {
                                 navigator.push(AddEditReportScreen(it))
                             }, // TODO: Add permissions check
-                            onReportSaveClick = { report, clientUsername, creatorName, farm, pump ->
+                            onReportSaveClick = { report, clientUsername, creatorName, farm, pump, company ->
                                 screenModel.savePdf(
                                     report,
                                     clientUsername,
                                     creatorName,
                                     farm,
-                                    pump
+                                    pump,
+                                    company
                                 )
                             },
                             onReportPrintClick = { },
@@ -180,7 +181,7 @@ class ReportsScreen : Screen {
         clients: List<Client>,
         users: List<User>,
         onReportEditClick: (Report) -> Unit,
-        onReportSaveClick: (Report, String, String, String, String) -> Unit,
+        onReportSaveClick: (Report, String, String, String, String, Company) -> Unit,
         onReportPrintClick: (Report) -> Unit,
         onReportDeleteClick: (Report) -> Unit,
         modifier: Modifier = Modifier,
@@ -268,7 +269,8 @@ class ReportsScreen : Screen {
                                     client?.name ?: "",
                                     creator?.username ?: "",
                                     farm?.name ?: "",
-                                    pump?.name ?: ""
+                                    pump?.name ?: "",
+                                    creator?.company ?: Company.UNKNOWN
                                 )
                             },
                             modifier = Modifier.size(24.dp)

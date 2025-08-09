@@ -13,7 +13,8 @@ data class User(
 
 enum class Company(val pretty: String) {
     MAGRINOV("Magrinov"),
-    LOTRAX("Lotrax")
+    LOTRAX("Lotrax"),
+    UNKNOWN("N/A")
 }
 
 @Dao

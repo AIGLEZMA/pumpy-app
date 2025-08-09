@@ -7,13 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import generateReport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import models.Client
-import models.Farm
-import models.Pump
-import models.Report
+import models.*
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.FilenameFilter
@@ -102,16 +100,17 @@ class ReportsScreenModel : ScreenModel {
         clientUsername: String,
         creatorName: String,
         farmName: String,
-        pumpName: String
+        pumpName: String,
+        company: Company
     ) {
         Logger.debug("[Report] Saving pdf of a report (id: ${report.reportId}) ...")
         screenModelScope.launch {
             withContext(Dispatchers.IO) {
                 val parentFrame = Frame()
-                val fileDialog = FileDialog(parentFrame, "Save PDF Report", FileDialog.SAVE)
+                val fileDialog = FileDialog(parentFrame, "Sauvegarder le rapport", FileDialog.SAVE)
 
                 // Set a default file name based on the report.
-                fileDialog.file = "Rapport-${report.reportId}.pdf"
+                fileDialog.file = "Rapport ${report.reportId}.pdf"
                 fileDialog.filenameFilter = FilenameFilter { _, name ->
                     name.endsWith(".pdf")
                 }
@@ -127,16 +126,15 @@ class ReportsScreenModel : ScreenModel {
                     val outputPath = Paths.get(selectedDirectory, selectedFile)
 
                     try {
-                        /*
-                        generateAndSaveWithOpenPDF(
+                        generateReport(
                             report = report,
                             clientUsername = clientUsername,
                             creatorName = creatorName,
                             farmName = farmName,
                             pumpName = pumpName,
-                            outputPath = outputPath
+                            company = company,
+                            outputPath = outputPath.toString()
                         )
-                         */
                         Logger.debug("[Report] Saving pdf done!")
                         // TODO: Add a UI notification to the user that the file was saved.
                     } catch (e: Exception) {
