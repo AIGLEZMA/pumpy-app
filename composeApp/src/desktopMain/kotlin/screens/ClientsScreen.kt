@@ -51,7 +51,7 @@ class ClientsScreen : Screen {
             screenModel.loadClients()
         }
 
-        val loginState = loginScreenModel.loginState
+        loginScreenModel.loginState
         val allClients = screenModel.clients
         val filteredClients = allClients.filter { client -> client.name.contains(searchQuery, ignoreCase = true) }
 

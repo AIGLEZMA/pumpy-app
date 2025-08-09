@@ -198,7 +198,7 @@ private fun addGeneralInfoSection(
     val operatorsCell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
         setPadding(4f)
-        addElement(Phrase("Opérateurs : ", robotoRegular.apply { setColor(Color.DARK_GRAY) }))
+        addElement(Phrase("Opérateurs : ", robotoRegular.apply { color = Color.DARK_GRAY }))
         addElement(operatorsList)
     }
     table.addCell(operatorsCell)
@@ -210,7 +210,7 @@ private fun addGeneralInfoSection(
 private fun addFinancialSection(document: Document, report: Report) {
     document.add(Paragraph("Détails Financiers", robotoBold.apply {
         size = 12f
-        setColor(accentColor)
+        color = accentColor
     }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
 
     val table = PdfPTable(2).apply {
@@ -232,7 +232,7 @@ private fun addFinancialSection(document: Document, report: Report) {
 private fun addTechnicalSection(document: Document, report: Report) {
     document.add(Paragraph("Détails Techniques", robotoBold.apply {
         size = 12f
-        setColor(accentColor)
+        color = accentColor
     }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
 
     val table = PdfPTable(2).apply {
