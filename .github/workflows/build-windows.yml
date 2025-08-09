@@ -1,0 +1,62 @@
+name: Build Windows EXE (Compose Desktop)
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  win:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # Optional: verify the resource files exist (helps when paths are wrong)
+      - name: List resources
+        shell: bash
+        run: |
+          ls -la composeApp/src/commonMain/resources || true
+          ls -la src/commonMain/resources || true
+
+      # Build (tries with explicit module, then without if your module isn't composeApp)
+      - name: Build Windows EXE (release)
+        shell: bash
+        run: |
+          ./gradlew --no-daemon --stacktrace :composeApp:packageReleaseExe || \
+          ./gradlew --no-daemon --stacktrace packageReleaseExe
+
+      # (Optional) also create the unpacked distributable folder with bundled JRE
+      - name: Create distributable folder (optional)
+        shell: bash
+        run: |
+          ./gradlew --no-daemon createReleaseDistributable || true
+
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magrinov-Windows-EXE
+          path: |
+            **/build/compose/binaries/*-release/exe/*.exe
+            **/build/compose/binaries/*Release/exe/*.exe
+          if-no-files-found: warn
+
+      - name: Upload distributable (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Magrinov-Distributable
+          path: |
+            **/build/compose/binaries/*-release/distributable/**
+            **/build/compose/binaries/*Release/distributable/**
+          if-no-files-found: ignore
