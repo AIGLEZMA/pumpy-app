@@ -5,7 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.transitions.SlideTransition
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
 import models.Company
@@ -55,9 +54,7 @@ fun App() {
         if (showSplash.value) {
             SplashScreen()
         } else {
-            Navigator(LoginScreen()) { navigator ->
-                SlideTransition(navigator = navigator)
-            }
+            Navigator(LoginScreen())
         }
     }
 }
