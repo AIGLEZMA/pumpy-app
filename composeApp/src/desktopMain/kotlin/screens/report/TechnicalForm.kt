@@ -1,14 +1,13 @@
 package screens.report
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -34,8 +33,10 @@ fun TechnicalForm(
     onEngineChange: (String) -> Unit,
     pump: String?,
     onPumpChange: (String) -> Unit,
-    elements: String?,
-    onElementsChange: (String) -> Unit,
+    elements: List<String>,
+    onElementAdd: () -> Unit,
+    onElementRemove: (Int) -> Unit,
+    onElementChange: (Int, String) -> Unit,
     notes: String?,
     onNotesChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -122,14 +123,11 @@ fun TechnicalForm(
             modifier = modifier.fillMaxWidth()
         )
         Spacer(modifier = spaceBetweenFields)
-        OutlinedTextField(
-            value = elements ?: "",
-            onValueChange = {
-                onElementsChange(it)
-            },
-            label = { Text("Élements") },
-            singleLine = true,
-            supportingText = { Text("") },
+        ElementsForm(
+            elements = elements,
+            onElementAdd = onElementAdd,
+            onElementChange = onElementChange,
+            onElementRemove = onElementRemove,
             modifier = modifier.fillMaxWidth()
         )
         Spacer(modifier = spaceBetweenFields)
@@ -138,6 +136,48 @@ fun TechnicalForm(
         notes = notes,
         onNotesChange = onNotesChange
     )
+}
+
+@Composable
+fun ElementsForm(
+    elements: List<String>,
+    onElementAdd: () -> Unit,
+    onElementChange: (Int, String) -> Unit,
+    onElementRemove: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Élements", style = MaterialTheme.typography.titleLarge)
+            IconButton(onClick = onElementAdd) {
+                Icon(Icons.Default.Add, contentDescription = "Ajouter un élement")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        elements.forEachIndexed { index, element ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = element,
+                    onValueChange = { onElementChange(index, it) },
+                    label = { Text("Élement #${index + 1}") },
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { onElementRemove(index) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer l'élement")
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
 }
 
 @Composable

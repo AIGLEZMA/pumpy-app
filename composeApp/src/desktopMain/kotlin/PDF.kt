@@ -6,49 +6,10 @@ import models.Company
 import models.Report
 import java.awt.Color
 import java.io.FileOutputStream
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 val frenchDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-fun main() {
-    val mockReport = Report(
-        reportId = 1,
-        creatorId = 101,
-        executionOrder = 12345,
-        requestDate = LocalDate.of(2025, 7, 15),
-        workStartDate = LocalDate.of(2025, 8, 5),
-        workFinishDate = LocalDate.of(2025, 8, 8),
-        pumpOwnerId = 201,
-        operators = listOf("John Doe", "Jane Smith"),
-        type = Report.OperationType.ASSEMBLY,
-        depth = 120L,
-        staticLevel = 30L,
-        dynamicLevel = 45L,
-        pumpShimming = 110L,
-        speed = 50.5f,
-        engine = "Moteur submersible Schneider Electric 200kW",
-        pump = "Pompe submersible Grundfos SP 95-9 (95 m³/h)",
-        elements = "• 120m de tuyau PVC PN16 DN150\n• Câble électrique submersible 4x35mm²\n• Clapet anti-retour DN150\n• Collier de serrage en inox",
-        notes = "This is a sample note about the work performed and observations made during the operation. The pump was successfully installed and tested.",
-        purchaseRequest = "DA-67890",
-        quotation = "Q-112233",
-        purchaseOrder = "BC-445566",
-        invoice = "INV-778899",
-        invoiceDate = LocalDate.of(2025, 8, 10)
-    )
-
-    val outputPath: Path = Paths.get("debug_v2.pdf")
-
-    try {
-        //generateReport(report = mockReport, company = Company.LOTRAX, outputPath = outputPath.toString())
-        Logger.debug("Successfully generated PDF at: ${outputPath.toAbsolutePath()}")
-    } catch (e: Exception) {
-        Logger.error("Failed to generate PDF", e)
-    }
-}
 
 fun generateReport(
     report: Report,
@@ -307,17 +268,12 @@ private fun addTechnicalSection(document: Document, report: Report) {
     })
     val elementsList = List(false, 5f)
 
-    val elementsToDisplay = report.elements ?: "N/A"
-
-    if (elementsToDisplay == "N/A") {
-        elementsList.add(ListItem("N/A", robotoLight))
-    } else {
-        elementsToDisplay.split("\n").forEach { line ->
-            if (line.isNotBlank()) {
-                elementsList.add(ListItem(line.trim().removePrefix("•").trim(), robotoLight))
-            }
+    report.elements.forEach { element ->
+        if (element.isNotBlank()) {
+            elementsList.add(ListItem(element, robotoLight))
         }
     }
+
     document.add(elementsList)
 }
 

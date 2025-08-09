@@ -36,7 +36,7 @@ data class Report(
     val speed: Float?,
     val engine: String?,
     val pump: String?,
-    val elements: String?,
+    val elements: List<String>,
     val notes: String?,
     val purchaseRequest: String, // demande d'achat
     val quotation: String, // devis

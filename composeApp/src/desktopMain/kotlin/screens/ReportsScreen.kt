@@ -550,7 +550,17 @@ class ReportsScreen : Screen {
                                                 text = "Élements:",
                                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                                             )
-                                            Text(report.elements ?: "Inconnu")
+                                            val elements = report.elements
+
+                                            if (elements.isEmpty()) {
+                                                Text("Aucuns")
+                                            } else {
+                                                Column {
+                                                    elements.forEach { element ->
+                                                        Text(text = element)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                     Column(

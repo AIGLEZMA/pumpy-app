@@ -152,7 +152,9 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                                         pump = screenModel.pump,
                                         onPumpChange = { screenModel.pump = it },
                                         elements = screenModel.elements,
-                                        onElementsChange = { screenModel.elements = it },
+                                        onElementAdd = { screenModel.addElement() },
+                                        onElementRemove = { screenModel.removeElement(it) },
+                                        onElementChange = { i, s -> screenModel.updateElement(i, s) },
                                         notes = screenModel.notes,
                                         onNotesChange = { screenModel.notes = it }
                                     )

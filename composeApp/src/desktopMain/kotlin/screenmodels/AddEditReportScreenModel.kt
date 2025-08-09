@@ -29,7 +29,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
     var speed by mutableStateOf(report?.speed)
     var engine by mutableStateOf(report?.engine)
     var pump by mutableStateOf(report?.pump)
-    var elements by mutableStateOf(report?.elements)
+    var elements by mutableStateOf(report?.elements?.toMutableStateList() ?: mutableStateListOf())
     var notes by mutableStateOf(report?.notes)
     var purchaseRequest by mutableStateOf(report?.purchaseRequest)
     var quotation by mutableStateOf(report?.quotation)
@@ -56,6 +56,22 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
     fun removeOperator(index: Int) {
         if (index in operators.indices) {
             operators.removeAt(index)
+        }
+    }
+
+    fun addElement() {
+        elements.add("")
+    }
+
+    fun updateElement(index: Int, newElement: String) {
+        if (index in elements.indices) {
+            elements[index] = newElement
+        }
+    }
+
+    fun removeElement(index: Int) {
+        if (index in elements.indices) {
+            elements.removeAt(index)
         }
     }
 

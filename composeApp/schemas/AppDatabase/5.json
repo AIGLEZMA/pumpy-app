@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "a436d0c65c6c47b08707541748f9f1e0",
+    "identityHash": "31fefff869fe1f0c23145b0dded06056",
     "entities": [
       {
         "tableName": "user",
@@ -170,7 +170,7 @@
       },
       {
         "tableName": "report",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reportId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `creatorId` INTEGER NOT NULL, `executionOrder` INTEGER NOT NULL, `requestDate` TEXT NOT NULL, `workStartDate` TEXT NOT NULL, `workFinishDate` TEXT NOT NULL, `pumpOwnerId` INTEGER NOT NULL, `operators` TEXT NOT NULL, `type` TEXT NOT NULL, `depth` INTEGER, `staticLevel` INTEGER, `dynamicLevel` INTEGER, `pumpShimming` INTEGER, `speed` REAL, `engine` TEXT, `pump` TEXT, `elements` TEXT, `notes` TEXT, `purchaseRequest` TEXT NOT NULL, `quotation` TEXT NOT NULL, `purchaseOrder` TEXT NOT NULL, `invoice` TEXT NOT NULL, `invoiceDate` TEXT, FOREIGN KEY(`pumpOwnerId`) REFERENCES `pump`(`pumpId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`creatorId`) REFERENCES `user`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reportId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `creatorId` INTEGER NOT NULL, `executionOrder` INTEGER NOT NULL, `requestDate` TEXT NOT NULL, `workStartDate` TEXT NOT NULL, `workFinishDate` TEXT NOT NULL, `pumpOwnerId` INTEGER NOT NULL, `operators` TEXT NOT NULL, `type` TEXT NOT NULL, `depth` INTEGER, `staticLevel` INTEGER, `dynamicLevel` INTEGER, `pumpShimming` INTEGER, `speed` REAL, `engine` TEXT, `pump` TEXT, `elements` TEXT NOT NULL, `notes` TEXT, `purchaseRequest` TEXT NOT NULL, `quotation` TEXT NOT NULL, `purchaseOrder` TEXT NOT NULL, `invoice` TEXT NOT NULL, `invoiceDate` TEXT, FOREIGN KEY(`pumpOwnerId`) REFERENCES `pump`(`pumpId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`creatorId`) REFERENCES `user`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "reportId",
@@ -264,7 +264,8 @@
           {
             "fieldPath": "elements",
             "columnName": "elements",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "notes",
@@ -335,7 +336,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a436d0c65c6c47b08707541748f9f1e0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '31fefff869fe1f0c23145b0dded06056')"
     ]
   }
 }

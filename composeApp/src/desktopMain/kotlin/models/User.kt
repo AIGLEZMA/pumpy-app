@@ -8,7 +8,7 @@ data class User(
     val username: String,
     val password: String,
     val isAdmin: Boolean = false,
-    val company: Company = Company.MAGRINOV
+    val company: Company
 )
 
 enum class Company(val pretty: String) {
