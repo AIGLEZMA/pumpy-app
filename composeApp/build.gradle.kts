@@ -47,6 +47,10 @@ kotlin {
     }
 }
 
+compose.resources {
+    publicResClass = true
+}
+
 compose.desktop {
     application {
         mainClass = "MainKt"
@@ -60,6 +64,11 @@ compose.desktop {
             windows {
                 // Specify the icon file for Windows. This should be an .ico file.
                 iconFile.set(project.file("src/commonMain/resources/icon.ico"))
+                menu = true
+                menuGroup = "Magrinov"
+
+                // creates Desktop shortcut
+                shortcut = true
             }
         }
     }
