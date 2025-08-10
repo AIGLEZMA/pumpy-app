@@ -1,1 +1,1 @@
-# Magrinov
+# Pumpy desktop app
