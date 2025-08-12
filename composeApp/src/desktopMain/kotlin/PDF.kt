@@ -53,8 +53,20 @@ private fun createLabeledCell(label: String, value: String): PdfPCell {
         setPadding(4f)
     }
     val phrase = Phrase().apply {
-        add(Chunk("$label : ", robotoRegular.apply { color = Color.DARK_GRAY }))
-        add(Chunk(value, robotoLight))
+        add(Chunk(
+            "$label : ",
+            robotoRegular.apply {
+                size = 10f
+                color = Color.DARK_GRAY
+            }
+        ))
+        add(Chunk(
+            value,
+            robotoLight.apply {
+                size = 11f
+                color = Color.BLACK
+            }
+        ))
     }
     cell.addElement(phrase)
     return cell

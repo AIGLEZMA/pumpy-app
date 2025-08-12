@@ -55,27 +55,29 @@ class ReportsScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { ReportsScreenModel() }
-        val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
-        val usersScreenModel = rememberScreenModel { UsersScreenModel() }
-        val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
+        val reportsModel = rememberScreenModel { ReportsScreenModel() }
+        val clientsModel = rememberScreenModel { ClientsScreenModel() }
+        val usersModel = rememberScreenModel { UsersScreenModel() }
+        val loginModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
-        val currentCompany: Company = loginScreenModel.loginState.company
+        val currentCompany: Company = loginModel.loginState.company
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var reportToDelete by remember { mutableStateOf<Report?>(null) }
 
-        LaunchedEffect(Unit) {
-            usersScreenModel.loadUsers()
-            clientsScreenModel.loadClients()
-            screenModel.loadReports()
+        // Load everything once
+        LaunchedEffect(reportsModel, clientsModel, usersModel) {
+            usersModel.loadUsers()
+            clientsModel.loadClients()
+            reportsModel.loadReports()
         }
 
-        val filteredReports = remember(screenModel.reports, currentCompany) {
-            screenModel.reports.filter { report -> report.company == currentCompany }
+        // Derive list for this company (you can also fold searchQuery here later)
+        val filteredReports by remember(reportsModel.reports, currentCompany) {
+            derivedStateOf { reportsModel.reports.filter { it.company == currentCompany } }
         }
 
-        val isLoading = screenModel.isLoading
+        val isLoading = reportsModel.isLoading
 
         Layout(
             selected = "reports",
@@ -85,7 +87,7 @@ class ReportsScreen : Screen {
             query = searchQuery,
             onQueryChange = { searchQuery = it },
             onLogout = {
-                loginScreenModel.logout()
+                loginModel.logout()
                 navigator.popUntilRoot()
             },
             isDarkMode = Theme.isDarkTheme,
@@ -104,39 +106,26 @@ class ReportsScreen : Screen {
                 ) {
                     Title(reports = filteredReports)
                     Spacer(Modifier.height(20.dp))
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                    Box(Modifier.fillMaxSize()) {
                         val state = rememberLazyListState()
                         ReportsList(
                             state = state,
                             reports = filteredReports,
-                            clients = clientsScreenModel.clients,
-                            users = usersScreenModel.users,
+                            clients = clientsModel.clients,
+                            users = usersModel.users,
                             currentCompany = currentCompany,
-                            onReportEditClick = {
-                                navigator.push(AddEditReportScreen(it))
-                            }, // TODO: Add permissions check
+                            onReportEditClick = { navigator.push(AddEditReportScreen(it)) }, // TODO perms
                             onReportSaveClick = { report, clientUsername, creatorName, farm, pump, company ->
-                                screenModel.savePdf(
-                                    report,
-                                    clientUsername,
-                                    creatorName,
-                                    farm,
-                                    pump,
-                                    company
-                                )
+                                reportsModel.savePdf(report, clientUsername, creatorName, farm, pump, company)
                             },
                             onReportPrintClick = { },
-                            onReportDeleteClick = { reportToDelete = it } // TODO: Add permissions check
+                            onReportDeleteClick = { reportToDelete = it } // TODO perms
                         )
                         VerticalScrollbar(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight(),
-                            adapter = rememberScrollbarAdapter(
-                                scrollState = state
-                            )
+                            adapter = rememberScrollbarAdapter(state)
                         )
                     }
                     reportToDelete?.let { report ->
@@ -144,7 +133,7 @@ class ReportsScreen : Screen {
                             title = "Supprimer le rapport",
                             message = "Êtes-vous sûr de vouloir supprimer le rapport ${report.reportId}",
                             onConfirm = {
-                                screenModel.deleteReport(report)
+                                reportsModel.deleteReport(report)
                                 reportToDelete = null
                             },
                             onDismiss = { reportToDelete = null }
@@ -191,27 +180,30 @@ class ReportsScreen : Screen {
         onReportDeleteClick: (Report) -> Unit,
         modifier: Modifier = Modifier,
     ) {
+        // Build lookup maps once per recomposition
+        val clientsById = remember(clients) { clients.associateBy { it.clientId } }
+        val usersById = remember(users) { users.associateBy { it.id } }
+
         LazyColumn(
             state = state,
             modifier = modifier.fillMaxSize()
         ) {
-            item {
-                ListHeader()
-            }
+            item { ListHeader() }
             items(reports) { report ->
-                val creator = users.firstOrNull { it.id == report.creatorId }
-                println(clients + " " + report.clientOwnerId)
-                val client = clients.firstOrNull { it.clientId == report.clientOwnerId }
+                val creator = usersById[report.creatorId]
+                val client = clientsById[report.clientOwnerId]
+
+                // Proper debug print (no accidental list concatenation)
+                println("clients=${clients.joinToString { it.clientId.toString() }}  id=${report.clientOwnerId}")
 
                 var expanded by remember { mutableStateOf(false) }
                 var menuExpanded by remember { mutableStateOf(false) }
                 var isHovered by remember { mutableStateOf(false) }
 
-                val backgroundColor = if (isHovered) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
+                val backgroundColor =
+                    if (isHovered) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    else MaterialTheme.colorScheme.surface
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,7 +217,7 @@ class ReportsScreen : Screen {
                                 }
                             )
                         }
-                        .clickable(onClick = { expanded = !expanded })
+                        .clickable { expanded = !expanded }
                         .padding(vertical = 12.dp, horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -235,13 +227,11 @@ class ReportsScreen : Screen {
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
-
                     Text(
                         report.requestDate.format(dateTimeFormatter),
                         modifier = Modifier.weight(2f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
-
                     Text(
                         report.wellDrilling,
                         modifier = Modifier.weight(2f),
@@ -326,15 +316,13 @@ class ReportsScreen : Screen {
                         )
                     }
                 }
+
                 if (expanded) {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                         shape = RectangleShape,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
@@ -350,109 +338,37 @@ class ReportsScreen : Screen {
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(
-                                        text = "Général:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp)
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Bon d'éxecution:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Text("Général:", style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Bon d'éxecution:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.executionOrder.toString())
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Date de demande:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                        Text(
-                                            report.requestDate.format(
-                                                DateTimeFormatter.ofPattern(
-                                                    "dd MMM yyyy",
-                                                    Locale.FRENCH
-                                                )
-                                            )
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Date de demande:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                                        Text(report.requestDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)))
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Début des travaux:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                        Text(
-                                            report.workStartDate.format(
-                                                DateTimeFormatter.ofPattern(
-                                                    "dd MMM yyyy",
-                                                    Locale.FRENCH
-                                                )
-                                            )
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Début des travaux:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                                        Text(report.workStartDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)))
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Fin des travaux:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                        Text(
-                                            report.workFinishDate.format(
-                                                DateTimeFormatter.ofPattern(
-                                                    "dd MMM yyyy",
-                                                    Locale.FRENCH
-                                                )
-                                            )
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Fin des travaux:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                                        Text(report.workFinishDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)))
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Client:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Client:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(client?.name ?: "Inconnu")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Installation:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Installation:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.farm)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Forage:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Forage:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.wellDrilling)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Intervenants:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Intervenants:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.operators.joinToString(" - "))
                                     }
                                 }
@@ -461,118 +377,53 @@ class ReportsScreen : Screen {
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(
-                                        text = "Technique:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp)
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Profondeur (m):",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Text("Technique:", style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Profondeur (m):", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text("${report.depth} m")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Niveau statique (m):",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Niveau statique (m):", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text("${report.staticLevel} m")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Niveau dynamique (m):",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Niveau dynamique (m):", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text("${report.dynamicLevel} m")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Calage de pompe (m):",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Calage de pompe (m):", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text("${report.pumpShimming} m")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Débit (m3/h):",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Débit (m3/h):", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text("${report.speed} m3/h")
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Type:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Type:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.type.beautiful)
                                     }
                                     if (report.type == Report.OperationType.ASSEMBLY) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                text = "Moteur:",
-                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                            )
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("Moteur:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                             Text(report.engine ?: "Inconnu")
                                         }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                text = "Pompe:",
-                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                            )
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("Pompe:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                             Text(report.pump ?: "Inconnu")
                                         }
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(
-                                                text = "Élements:",
-                                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                            )
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text("Élements:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                             val elements = report.elements
-
                                             if (elements.isEmpty()) {
                                                 Text("Aucuns")
                                             } else {
-                                                Column {
-                                                    elements.forEach { element ->
-                                                        Text(text = element)
-                                                    }
-                                                }
+                                                Column { elements.forEach { element -> Text(text = element) } }
                                             }
                                         }
                                     }
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalArrangement = Arrangement.SpaceBetween
-                                    ) {
+                                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.SpaceBetween) {
                                         Text(
-                                            text = "Travaux effectués & observations:",
+                                            "Travaux effectués & observations:",
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                                             modifier = Modifier.padding(bottom = 4.dp)
                                         )
@@ -584,58 +435,25 @@ class ReportsScreen : Screen {
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(
-                                        text = "Executive:",
-                                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp)
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Demande d'achat:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Text("Executive:", style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Demande d'achat:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.purchaseRequest)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Devis:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Devis:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.quotation)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Bon de commande:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Bon de commande:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.purchaseOrder)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Facture:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Facture:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.invoice)
                                     }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Date de facturation:",
-                                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text("Date de facturation:", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                                         Text(report.invoiceDate?.format(dateTimeFormatter) ?: "Inconnu")
                                     }
                                 }
@@ -660,36 +478,12 @@ class ReportsScreen : Screen {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                "ID",
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
-            Text(
-                "Date",
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
-            Text(
-                "Pompe",
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
-            Text(
-                "Installation",
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
-            Text(
-                "Client",
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
-            Text(
-                "Demandeur",
-                modifier = Modifier.weight(2f),
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
-            )
+            Text("ID", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
+            Text("Date", modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
+            Text("Pompe", modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
+            Text("Installation", modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
+            Text("Client", modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
+            Text("Demandeur", modifier = Modifier.weight(2f), style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp))
             Spacer(modifier = Modifier.weight(2f))
         }
         HorizontalDivider(modifier = modifier.padding(horizontal = 8.dp))

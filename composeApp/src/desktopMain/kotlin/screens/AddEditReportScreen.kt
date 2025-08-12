@@ -8,10 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -23,7 +23,6 @@ import models.Report.OperationType
 import screenmodels.AddEditReportScreenModel
 import screenmodels.ClientsScreenModel
 import screenmodels.LoginScreenModel
-import screenmodels.ReportsScreenModel
 import screens.report.ExecutiveForm
 import screens.report.GeneralForm
 import screens.report.TechnicalForm
@@ -32,13 +31,10 @@ val spaceBetweenFields = Modifier.height(4.dp)
 
 class AddEditReportScreen(private val report: Report? = null) : Screen {
 
-    // TODO: add field tests
-    // TODO: add loading progress
     @Preview
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val reportsScreenModel = rememberScreenModel { ReportsScreenModel() }
         val clientsScreenModel = rememberScreenModel { ClientsScreenModel() }
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
@@ -46,8 +42,40 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val state = screenModel.state
         val clients = clientsScreenModel.clients
 
+        // Ensure clients are loaded for the autocomplete
+        LaunchedEffect(clientsScreenModel) {
+            clientsScreenModel.loadClients()
+        }
+
+        // Save action
+        fun save() {
+            val loggedInUser = loginScreenModel.loginState.user
+            val company = loginScreenModel.loginState.company
+            if (loggedInUser == null) {
+                Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
+                return
+            }
+            screenModel.saveReport(loggedInUser, company)
+        }
+
+        // Navigate back after successful save
+        LaunchedEffect(state.isSaved) {
+            if (state.isSaved) navigator.pop()
+        }
+
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Keyboard shortcut: Ctrl/Cmd + Enter to save
+                .onPreviewKeyEvent { e ->
+                    if (e.type == KeyEventType.KeyUp &&
+                        e.key == Key.Enter &&
+                        (e.isCtrlPressed || e.isMetaPressed)
+                    ) {
+                        if (!state.isLoading) save()
+                        true
+                    } else false
+                },
             color = MaterialTheme.colorScheme.background
         ) {
             Box(
@@ -55,29 +83,36 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Title at the top
+                    // Top progress when saving
+                    if (state.isLoading) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    // Title
                     Title(isEditMode = state.isEditMode, reportId = report?.reportId)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Three forms in a row, each with its own scrollbar
                     Row(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(24.dp), // Increased space between columns
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.Top
                     ) {
-                        // GeneralForm Column with Sticky Title
+                        // General
                         Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                             val scrollStateGeneral = rememberScrollState()
                             Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
-                                Text(
-                                    text = "Informations Générales",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Informations Générales", style = MaterialTheme.typography.titleLarge)
+                                Spacer(Modifier.height(8.dp))
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -97,9 +132,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                                         clients = clients,
                                         selectedClient = screenModel.selectedClient,
-                                        onSelectedClientChange = {
-                                            screenModel.selectedClient = it
-                                        },
+                                        onSelectedClientChange = { screenModel.selectedClient = it },
                                         selectedFarmName = screenModel.selectedFarmName,
                                         onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
                                         selectedPumpName = screenModel.selectedPumpName,
@@ -119,15 +152,12 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                             )
                         }
 
-                        // TechnicalForm Column with Sticky Title
+                        // Technical
                         Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                             val scrollStateTechnical = rememberScrollState()
                             Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
-                                Text(
-                                    text = "Informations Techniques",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Informations Techniques", style = MaterialTheme.typography.titleLarge)
+                                Spacer(Modifier.height(8.dp))
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -164,15 +194,12 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                             )
                         }
 
-                        // ExecutiveForm Column with Sticky Title
+                        // Executive
                         Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                             val scrollStateExecutive = rememberScrollState()
                             Column(modifier = Modifier.fillMaxSize().padding(end = 24.dp)) {
-                                Text(
-                                    text = "Informations Exécutives",
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Informations Exécutives", style = MaterialTheme.typography.titleLarge)
+                                Spacer(Modifier.height(8.dp))
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -199,37 +226,24 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
 
-                    // Action buttons at the bottom
+                    // Actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
                         ActionButtons(
-                            saveReport = {
-                                val loggedInUser = loginScreenModel.loginState.user
-                                val company = loginScreenModel.loginState.company
-                                if (loggedInUser == null) {
-                                    Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
-                                    return@ActionButtons
-                                }
-                                screenModel.saveReport(loggedInUser, company)
-                            },
-                            onCancel = { navigator.pop() }
+                            saveReport = { if (!state.isLoading) save() },
+                            onCancel = { navigator.pop() },
+                            saving = state.isLoading
                         )
                     }
 
-                    // Error message at the bottom
-                    if (state.errorMessage != null) {
-                        Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
-                    }
-
-                    // Saved state logic
-                    if (state.isSaved) {
-                        LaunchedEffect(Unit) {
-                            navigator.pop()
-                        }
+                    // Error
+                    state.errorMessage?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(it, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -245,13 +259,10 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(text = "MAGRINOV", style = MaterialTheme.typography.headlineLarge)
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = "MAGRINOV",
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = if (isEditMode) "Editer le rapport (#$reportId)" else "Rédiger un nouveau rapport",
+                text = if (isEditMode) "Éditer le rapport (#$reportId)" else "Rédiger un nouveau rapport",
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -261,6 +272,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
     fun ActionButtons(
         saveReport: () -> Unit,
         onCancel: () -> Unit,
+        saving: Boolean,
         modifier: Modifier = Modifier,
     ) {
         Row(
@@ -268,18 +280,19 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                onClick = onCancel,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.width(150.dp)
-            ) {
-                Text(text = "Annuler")
-            }
             OutlinedButton(
-                onClick = saveReport,
+                onClick = onCancel,
+                enabled = !saving,
                 modifier = Modifier.width(150.dp)
             ) {
-                Text(text = "Enregister")
+                Text("Annuler")
+            }
+            Button(
+                onClick = saveReport,
+                enabled = !saving,
+                modifier = Modifier.width(150.dp)
+            ) {
+                Text("Enregistrer")
             }
         }
     }

@@ -9,6 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,63 +43,105 @@ fun TechnicalForm(
     onElementChange: (Int, String) -> Unit,
     notes: String?,
     onNotesChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
+    val focus = LocalFocusManager.current
+
     NumberTextField(
         value = depth,
         label = "Profondeur (m)",
-        onValueChange = { onDepthChange(it) },
-        modifier = modifier.fillMaxWidth()
-    )
-    Spacer(modifier = spaceBetweenFields)
-    NumberTextField(
-        value = staticLevel,
-        label = "Niveau statique (m)",
-        onValueChange = { onStaticLevelChange(it) },
-        modifier = modifier.fillMaxWidth()
-    )
-    Spacer(modifier = spaceBetweenFields)
-    NumberTextField(
-        value = dynamicLevel,
-        label = "Niveau dynamique (m)",
-        onValueChange = { onDynamicLevelChange(it) },
-        modifier = modifier.fillMaxWidth()
-    )
-    Spacer(modifier = spaceBetweenFields)
-    NumberTextField(
-        value = pumpShimming,
-        label = "Calage de pompe (m)",
-        onValueChange = { onPumpShimmingChange(it) },
-        modifier = modifier.fillMaxWidth()
+        onValueChange = onDepthChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
     )
     Spacer(modifier = spaceBetweenFields)
 
-    var speedText by remember { mutableStateOf(speed?.toString() ?: "") }
+    NumberTextField(
+        value = staticLevel,
+        label = "Niveau statique (m)",
+        onValueChange = onStaticLevelChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+    Spacer(modifier = spaceBetweenFields)
+
+    NumberTextField(
+        value = dynamicLevel,
+        label = "Niveau dynamique (m)",
+        onValueChange = onDynamicLevelChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+    Spacer(modifier = spaceBetweenFields)
+
+    NumberTextField(
+        value = pumpShimming,
+        label = "Calage de pompe (m)",
+        onValueChange = onPumpShimmingChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+    Spacer(modifier = spaceBetweenFields)
+
+    // Débit (float) with comma/dot handling and validation
+    var speedText by remember(speed) { mutableStateOf(speed?.toString() ?: "") }
     var isSpeedError by remember { mutableStateOf(false) }
+
     OutlinedTextField(
         value = speedText,
         onValueChange = { newValue ->
-            speedText = newValue
-            val floatValue = newValue.toFloatOrNull()
-            isSpeedError = newValue.isNotEmpty() && floatValue == null
-            onSpeedChange(floatValue)
+            // allow digits, one comma or dot, and empty
+            val cleaned = newValue
+                .replace(',', '.')
+                .filterIndexed { idx, c ->
+                    c.isDigit() || c == '.' || (c == '-' && idx == 0)
+                }
+            speedText = cleaned
+            val parsed = cleaned.toFloatOrNull()
+            isSpeedError = cleaned.isNotEmpty() && parsed == null
+            onSpeedChange(parsed)
         },
         label = { Text("Débit (m3/h)") },
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal,
+            imeAction = if (type == Report.OperationType.ASSEMBLY) ImeAction.Next else ImeAction.Next
+        ),
         singleLine = true,
         isError = isSpeedError,
         supportingText = {
             if (isSpeedError) {
-                Text(
-                    text = "Veuillez entrer un nombre décimal valide.",
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text("Veuillez entrer un nombre décimal valide.", color = MaterialTheme.colorScheme.error)
             } else {
-                // This reserves the space even when there's no error
-                Text("")
+                Text("") // keep space
             }
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
     )
 
     Spacer(modifier = spaceBetweenFields)
@@ -103,26 +149,38 @@ fun TechnicalForm(
     if (type == Report.OperationType.ASSEMBLY) {
         OutlinedTextField(
             value = engine ?: "",
-            onValueChange = {
-                onEngineChange(it)
-            },
+            onValueChange = onEngineChange,
             label = { Text("Moteur") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             supportingText = { Text("") },
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { e ->
+                    if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                        focus.moveFocus(FocusDirection.Next); true
+                    } else false
+                }
         )
         Spacer(modifier = spaceBetweenFields)
+
         OutlinedTextField(
             value = pump ?: "",
-            onValueChange = {
-                onPumpChange(it)
-            },
+            onValueChange = onPumpChange,
             label = { Text("Pompe") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             supportingText = { Text("") },
-            modifier = modifier.fillMaxWidth()
+            modifier = modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { e ->
+                    if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                        focus.moveFocus(FocusDirection.Next); true
+                    } else false
+                }
         )
         Spacer(modifier = spaceBetweenFields)
+
         ElementsForm(
             elements = elements,
             onElementAdd = onElementAdd,
@@ -132,6 +190,7 @@ fun TechnicalForm(
         )
         Spacer(modifier = spaceBetweenFields)
     }
+
     NotesTextBox(
         notes = notes,
         onNotesChange = onNotesChange
@@ -144,8 +203,10 @@ fun ElementsForm(
     onElementAdd: () -> Unit,
     onElementChange: (Int, String) -> Unit,
     onElementRemove: (Int) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
+    val focus = LocalFocusManager.current
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -169,7 +230,15 @@ fun ElementsForm(
                     value = element,
                     onValueChange = { onElementChange(index, it) },
                     label = { Text("Élement #${index + 1}") },
-                    modifier = Modifier.weight(1f)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    modifier = Modifier
+                        .weight(1f)
+                        .onPreviewKeyEvent { e ->
+                            if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                                focus.moveFocus(FocusDirection.Next); true
+                            } else false
+                        }
                 )
                 IconButton(onClick = { onElementRemove(index) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Supprimer l'élement")
@@ -184,11 +253,11 @@ fun ElementsForm(
 fun NotesTextBox(
     notes: String?,
     onNotesChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = notes ?: "",
-        onValueChange = { onNotesChange(it) },
+        onValueChange = onNotesChange,
         label = { Text("Travaux effectués & observations") },
         modifier = modifier
             .fillMaxWidth()

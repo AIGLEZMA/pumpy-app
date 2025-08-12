@@ -41,22 +41,38 @@ class UsersScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { UsersScreenModel() }
+        val usersScreenModel = rememberScreenModel { UsersScreenModel() }
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var userToDelete by remember { mutableStateOf<User?>(null) }
 
-        LaunchedEffect(Unit) {
-            screenModel.loadUsers()
+        // Load once when the screen enters composition
+        LaunchedEffect(usersScreenModel) {
+            usersScreenModel.loadUsers()
         }
 
         val loginState = loginScreenModel.loginState
-        val allUsers = screenModel.users
-        val filteredUsers = allUsers.filter { user -> user.username.contains(searchQuery, ignoreCase = true) }
-        val sortedUsers = filteredUsers.sortedWith(compareBy({ it.id != loginState.user?.id }, { it.username }))
+        val isLoading = usersScreenModel.isLoading
 
-        val isLoading = screenModel.isLoading
+        // Derive filtered + sorted list from source state
+        val sortedUsers by remember(
+            usersScreenModel.users,
+            searchQuery,
+            loginState.user
+        ) {
+            derivedStateOf {
+                usersScreenModel.users
+                    .asSequence()
+                    .filter { it.username.contains(searchQuery, ignoreCase = true) }
+                    // Pin the logged-in user on top, then alpha by username
+                    .sortedWith(
+                        compareBy<User> { it.id != loginState.user?.id }
+                            .thenBy { it.username.lowercase() }
+                    )
+                    .toList()
+            }
+        }
 
         Layout(
             selected = "users",
@@ -82,28 +98,21 @@ class UsersScreen : Screen {
                         .padding(20.dp)
                         .shadow(2.dp, RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-
                 ) {
                     Title(sortedUsers = sortedUsers)
                     Spacer(Modifier.height(20.dp))
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                    Box(Modifier.fillMaxSize()) {
                         val state = rememberLazyListState()
                         UsersList(
                             state = state,
                             loggedInUser = loginState.user,
                             sortedUsers = sortedUsers,
-                            onUserEditClick = {
-                                navigator.push(AddEditUserScreen(it))
-                            }, // TODO: permissions
-                            onUserDeleteClick = { userToDelete = it } // TODO: permissions
+                            onUserEditClick = { navigator.push(AddEditUserScreen(it)) },
+                            onUserDeleteClick = { userToDelete = it }
                         )
                         VerticalScrollbar(
                             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                            adapter = rememberScrollbarAdapter(
-                                scrollState = state
-                            )
+                            adapter = rememberScrollbarAdapter(state)
                         )
                     }
                     userToDelete?.let { user ->
@@ -111,7 +120,7 @@ class UsersScreen : Screen {
                             title = "Supprimer l'utilisateur",
                             message = "Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.username}",
                             onConfirm = {
-                                screenModel.deleteUser(userToDelete!!)
+                                usersScreenModel.deleteUser(user)
                                 userToDelete = null
                             },
                             onDismiss = { userToDelete = null }
@@ -121,6 +130,7 @@ class UsersScreen : Screen {
             }
         }
     }
+
 
     @Composable
     fun Title(

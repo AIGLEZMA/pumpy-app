@@ -41,39 +41,46 @@ class ClientsScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { ClientsScreenModel() }
-        val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
+        val clientsModel = rememberScreenModel { ClientsScreenModel() }
+        val loginModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var clientToDelete by remember { mutableStateOf<Client?>(null) }
 
-        LaunchedEffect(Unit) {
-            screenModel.loadClients()
+        // Load clients once when entering the screen
+        LaunchedEffect(clientsModel) {
+            clientsModel.loadClients()
         }
 
-        loginScreenModel.loginState
-        val allClients = screenModel.clients
-        val filteredClients = allClients.filter { client -> client.name.contains(searchQuery, ignoreCase = true) }
+        val isLoading = clientsModel.isLoading
 
-        val isLoading = screenModel.isLoading
+        // Derive filtered (and sorted) clients efficiently
+        val filteredClients by remember(clientsModel.clients, searchQuery) {
+            derivedStateOf {
+                clientsModel.clients
+                    .asSequence()
+                    .filter { it.name.contains(searchQuery, ignoreCase = true) }
+                    .sortedBy { it.name.lowercase() }
+                    .toList()
+            }
+        }
 
         Layout(
             selected = "clients",
             onReportsClick = { navigator.push(ReportsScreen()) },
-            onClientsClick = {},
+            onClientsClick = { },
             onUsersClick = { navigator.push(UsersScreen()) },
             query = searchQuery,
             onQueryChange = { searchQuery = it },
             onLogout = {
-                loginScreenModel.logout()
+                loginModel.logout()
                 navigator.popUntilRoot()
             },
             isDarkMode = Theme.isDarkTheme,
             onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditClientScreen()) },
-            companyLabel = loginScreenModel.loginState.company.pretty
+            companyLabel = loginModel.loginState.company.pretty
         ) {
-            // TODO: no clients view
             if (isLoading) {
                 Loading()
             } else {
@@ -82,27 +89,22 @@ class ClientsScreen : Screen {
                         .padding(20.dp)
                         .shadow(2.dp, RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-
                 ) {
-                    Title(clients = allClients)
+                    Title(clients = filteredClients)
                     Spacer(Modifier.height(20.dp))
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+                    Box(Modifier.fillMaxSize()) {
                         val state = rememberLazyListState()
                         ClientsList(
                             state = state,
                             clients = filteredClients,
-                            onClientEditClick = {
-                                navigator.push(AddEditClientScreen(it))
-                            }, // TODO: permissions
-                            onClientDeleteClick = { clientToDelete = it } // TODO: permissions
+                            onClientEditClick = { navigator.push(AddEditClientScreen(it)) },
+                            onClientDeleteClick = { clientToDelete = it }
                         )
                         VerticalScrollbar(
-                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                            adapter = rememberScrollbarAdapter(
-                                scrollState = state
-                            )
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .fillMaxHeight(),
+                            adapter = rememberScrollbarAdapter(state)
                         )
                     }
                     clientToDelete?.let { client ->
@@ -110,7 +112,7 @@ class ClientsScreen : Screen {
                             title = "Supprimer le client",
                             message = "Êtes-vous sûr de vouloir supprimer le client ${client.name}",
                             onConfirm = {
-                                screenModel.deleteClient(client!!)
+                                clientsModel.deleteClient(client)
                                 clientToDelete = null
                             },
                             onDismiss = { clientToDelete = null }
@@ -135,7 +137,7 @@ class ClientsScreen : Screen {
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = "(${clients.size})",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
@@ -162,9 +164,7 @@ class ClientsScreen : Screen {
                     modifier = Modifier.fillMaxWidth(),
                     headlineContent = { Text(text = client.name, fontSize = 14.sp) },
                     supportingContent = { Text(client.phoneNumber) },
-                    leadingContent = {
-                        AccountIcon(firstLetter)
-                    },
+                    leadingContent = { AccountIcon(firstLetter) },
                     trailingContent = {
                         Row {
                             IconButton(onClick = { onClientEditClick(client) }) {

@@ -1,6 +1,7 @@
 package screens.report
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -8,6 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import models.Client
 import models.Report
@@ -42,59 +47,86 @@ fun GeneralForm(
     onTypeSelected: (Report.OperationType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focus = LocalFocusManager.current
+
     NumberTextField(
         value = executionOrder,
         label = "Bon d'exécution",
-        onValueChange = { onExecutionOrderChange(it) },
-        modifier = modifier.fillMaxWidth()
+        onValueChange = onExecutionOrderChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
     )
+
     DatePickerAndTextField(
         value = requestDate,
         label = "Date de demande",
-        onValueChange = { onRequestDateChange(it) },
+        onValueChange = onRequestDateChange,
         modifier = modifier.fillMaxWidth()
     )
     DatePickerAndTextField(
         value = workStartDate,
         label = "Date de début des travaux",
-        onValueChange = { onWorkStartDateChange(it) },
+        onValueChange = onWorkStartDateChange,
         modifier = modifier.fillMaxWidth()
     )
     DatePickerAndTextField(
         value = workFinishDate,
         label = "Date de fin des travaux",
-        onValueChange = { onWorkFinishDateChange(it) },
+        onValueChange = onWorkFinishDateChange,
         modifier = modifier.fillMaxWidth()
     )
+
     AutoCompleteTextField(
         label = "Client",
         items = clients,
         selectedItem = selectedClient,
-        onSelectedItemChange = { client -> onSelectedClientChange(client) },
-        displayText = { client -> client.name },
+        onSelectedItemChange = onSelectedClientChange,
+        displayText = { it.name },
+        enabled = clients.isNotEmpty(),
         modifier = Modifier.fillMaxWidth()
     )
+
     Spacer(modifier = spaceBetweenFields)
+
     OutlinedTextField(
         value = selectedFarmName ?: "",
-        onValueChange = {
-            onSelectedFarmNameChange(it)
-        },
+        onValueChange = onSelectedFarmNameChange,
         label = { Text("Installation") },
         singleLine = true,
-        modifier = modifier.fillMaxWidth()
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
     )
+
     Spacer(modifier = spaceBetweenFields)
+
     OutlinedTextField(
         value = selectedPumpName ?: "",
-        onValueChange = {
-            onSelectedPumpNameChange(it)
-        },
+        onValueChange = onSelectedPumpNameChange,
         label = { Text("Forage") },
         singleLine = true,
-        modifier = modifier.fillMaxWidth()
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
     )
+
     Spacer(modifier = spaceBetweenFields)
+
     OperatorForm(
         operators = operators,
         onOperatorAdd = onOperatorAdd,
@@ -102,7 +134,9 @@ fun GeneralForm(
         onOperatorRemove = onOperatorRemove,
         modifier = modifier.fillMaxWidth()
     )
+
     Spacer(modifier = spaceBetweenFields)
+
     OperationTypeBreadcrumb(
         selectedType = selectedType,
         onTypeSelected = onTypeSelected,
@@ -118,6 +152,8 @@ fun OperatorForm(
     onOperatorRemove: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focus = LocalFocusManager.current
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -141,7 +177,15 @@ fun OperatorForm(
                     value = operator,
                     onValueChange = { onOperatorChange(index, it) },
                     label = { Text("Opérateur #${index + 1}") },
-                    modifier = Modifier.weight(1f)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    modifier = Modifier
+                        .weight(1f)
+                        .onPreviewKeyEvent { e ->
+                            if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                                focus.moveFocus(FocusDirection.Next); true
+                            } else false
+                        }
                 )
                 IconButton(onClick = { onOperatorRemove(index) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Supprimer l'opérateur")
@@ -159,7 +203,6 @@ fun OperationTypeBreadcrumb(
     onTypeSelected: (Report.OperationType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Map your enum names (adjust DISASSEMBLY if your enum uses another name)
     val assembly = Report.OperationType.ASSEMBLY
     val disassembly = Report.OperationType.DISASSEMBLY
 
@@ -187,4 +230,3 @@ fun OperationTypeBreadcrumb(
         }
     }
 }
-

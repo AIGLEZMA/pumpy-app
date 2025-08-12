@@ -1,6 +1,5 @@
 package ui
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,7 +12,8 @@ fun <T> AutoCompleteTextField(
     selectedItem: T?,
     onSelectedItemChange: (T?) -> Unit,
     displayText: (T) -> String,
-    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     var expand by remember { mutableStateOf(false) }
     var text by remember { mutableStateOf(selectedItem?.let(displayText) ?: "") }
@@ -27,41 +27,46 @@ fun <T> AutoCompleteTextField(
 
     ExposedDropdownMenuBox(
         expanded = expand,
-        onExpandedChange = { expand = !expand },
+        onExpandedChange = { if (enabled) expand = !expand },
     ) {
         OutlinedTextField(
             value = text,
             label = { Text(label) },
             onValueChange = { newValue ->
-                text = newValue
-                expand = true
-                // If the user clears the text, treat the item as unselected
-                if (newValue.isEmpty()) {
-                    onSelectedItemChange(null)
+                if (enabled) {
+                    text = newValue
+                    expand = true
+                    // If the user clears the text, treat the item as unselected
+                    if (newValue.isEmpty()) {
+                        onSelectedItemChange(null)
+                    }
                 }
             },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expand) },
             modifier = modifier.menuAnchor(MenuAnchorType.PrimaryEditable),
-            singleLine = true
+            singleLine = true,
+            enabled = enabled // ✅ Apply enabled state
         )
 
-        val filteredItems = remember(text, items) {
-            items.filter { displayText(it).contains(text, ignoreCase = true) }
-        }
+        if (enabled) {
+            val filteredItems = remember(text, items) {
+                items.filter { displayText(it).contains(text, ignoreCase = true) }
+            }
 
-        ExposedDropdownMenu(
-            expanded = expand,
-            onDismissRequest = { expand = false },
-        ) {
-            filteredItems.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(displayText(item)) },
-                    onClick = {
-                        text = displayText(item)
-                        onSelectedItemChange(item)
-                        expand = false
-                    }
-                )
+            ExposedDropdownMenu(
+                expanded = expand,
+                onDismissRequest = { expand = false },
+            ) {
+                filteredItems.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(displayText(item)) },
+                        onClick = {
+                            text = displayText(item)
+                            onSelectedItemChange(item)
+                            expand = false
+                        }
+                    )
+                }
             }
         }
     }
