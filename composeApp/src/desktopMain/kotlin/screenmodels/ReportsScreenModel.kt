@@ -11,7 +11,8 @@ import generateReport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import models.*
+import models.Company
+import models.Report
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.FilenameFilter
@@ -21,43 +22,11 @@ class ReportsScreenModel : ScreenModel {
     var reports by mutableStateOf<List<Report>>(emptyList())
         private set
 
-    var farms by mutableStateOf<List<Farm>>(emptyList())
-        private set
-
-    var pumps by mutableStateOf<List<Pump>>(emptyList())
-        private set
-
     var isLoading by mutableStateOf(false)
         private set
 
     init {
-        loadFarms()
-        loadPumps()
         loadReports()
-    }
-
-    fun loadFarms() {
-        Logger.debug("[Farm] Loading farms...")
-        screenModelScope.launch {
-            isLoading = true
-            val farmDao = DatabaseProvider.getDatabase().farmDao()
-            farms = farmDao.getAllFarms()
-            isLoading = false
-        }.invokeOnCompletion {
-            Logger.debug("[Farm] Loaded ${farms.size} farm(s)")
-        }
-    }
-
-    fun loadPumps() {
-        Logger.debug("[Pump] Loading pumps...")
-        screenModelScope.launch {
-            isLoading = true
-            val pumpDao = DatabaseProvider.getDatabase().pumpDao()
-            pumps = pumpDao.getAllPumps()
-            isLoading = false
-        }.invokeOnCompletion {
-            Logger.debug("[Pump] Loaded ${pumps.size} pump(s)")
-        }
     }
 
     fun loadReports() {
@@ -70,18 +39,6 @@ class ReportsScreenModel : ScreenModel {
         }.invokeOnCompletion {
             Logger.debug("[Report] Loaded ${reports.size} report(s)")
         }
-    }
-
-    fun fetchFarmNames(client: Client): List<String> {
-        return farms.filter { it.clientOwnerId == client.clientId }.map { it.name }
-    }
-
-    fun fetchPumpNames(farmName: String): List<String> {
-        val farm = farms.firstOrNull { it.name.equals(farmName, true) }
-        if (farm == null) {
-            return emptyList()
-        }
-        return pumps.filter { it.pumpId == farm.farmId }.map { it.name }
     }
 
     fun deleteReport(report: Report) {

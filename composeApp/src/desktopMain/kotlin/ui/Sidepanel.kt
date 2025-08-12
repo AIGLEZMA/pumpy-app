@@ -1,6 +1,7 @@
 package ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Badge
@@ -20,6 +21,7 @@ fun SidepanelContent(
     onReportsClick: () -> Unit,
     onClientsClick: () -> Unit,
     onUsersClick: () -> Unit,
+    companyLabel: String? = null,
     modifier: Modifier
 ) {
     PermanentDrawerSheet(
@@ -36,6 +38,15 @@ fun SidepanelContent(
                     .fillMaxWidth()
                     .padding(20.dp)
             )
+            if (!companyLabel.isNullOrBlank()) {
+                CompanyBadge(
+                    label = companyLabel,
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .padding(top = 6.dp)
+                        .fillMaxWidth()
+                )
+            }
             Spacer(Modifier.height(24.dp))
             NavigationDrawerItem(
                 icon = { Icon(Icons.Outlined.Description, contentDescription = "Reports") },
@@ -60,6 +71,34 @@ fun SidepanelContent(
                 selected = selected == "users",
                 onClick = onUsersClick,
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompanyBadge(label: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // tiny dot
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(8.dp)
+            ) {}
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

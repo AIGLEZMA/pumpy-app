@@ -21,13 +21,14 @@ fun Layout(
     isDarkMode: Boolean,
     onToggleTheme: () -> Unit,
     onFabClick: () -> Unit,
+    companyLabel: String,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     PermanentNavigationDrawer(
         drawerContent = {
             SidepanelContent(
-                selected, onReportsClick, onClientsClick, onUsersClick, modifier
+                selected, onReportsClick, onClientsClick, onUsersClick, companyLabel, modifier
             )
         }
     ) {

@@ -6,9 +6,9 @@ import java.time.LocalDate
 @Entity(
     tableName = "report",
     foreignKeys = [ForeignKey(
-        entity = Pump::class,
-        parentColumns = ["pumpId"],
-        childColumns = ["pumpOwnerId"],
+        entity = Client::class,
+        parentColumns = ["clientId"],
+        childColumns = ["clientOwnerId"],
         onDelete = ForeignKey.CASCADE
     ),
         ForeignKey(
@@ -26,9 +26,12 @@ data class Report(
     val requestDate: LocalDate,
     val workStartDate: LocalDate,
     val workFinishDate: LocalDate,
-    val pumpOwnerId: Long,
+    val clientOwnerId: Long,
     val operators: List<String>,
     val type: OperationType,
+    val company: Company,
+    val wellDrilling: String,
+    val farm: String,
     val depth: Long?,
     val staticLevel: Long?,
     val dynamicLevel: Long?,
@@ -42,7 +45,7 @@ data class Report(
     val quotation: String, // devis
     val purchaseOrder: String, // bon de commande
     val invoice: String, // facture
-    val invoiceDate: LocalDate?,
+    val invoiceDate: LocalDate?
 ) {
     enum class OperationType(val beautiful: String) {
         ASSEMBLY("Montage"),
@@ -60,9 +63,6 @@ interface ReportDao {
 
     @Update
     suspend fun update(report: Report)
-
-    @Query("SELECT * FROM report WHERE pumpOwnerId = :pumpId")
-    suspend fun getReportByPumpId(pumpId: Long): List<Report>
 
     @Query("SELECT * FROM report")
     suspend fun getAllReports(): List<Report>

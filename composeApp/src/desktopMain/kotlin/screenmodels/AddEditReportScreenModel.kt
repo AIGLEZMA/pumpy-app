@@ -6,7 +6,10 @@ import androidx.compose.runtime.*
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
-import models.*
+import models.Client
+import models.Company
+import models.Report
+import models.User
 
 class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel {
     var state by mutableStateOf(ReportState())
@@ -75,65 +78,48 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
         }
     }
 
-    fun saveReport(loggedInUser: User) {
+    private fun firstValidationError(): String? = when {
+        executionOrder == null -> "Le bon d'exécution doit être rempli."
+        requestDate == null -> "La date de demande doit être remplie."
+        workStartDate == null -> "La date de début des travaux doit être remplie."
+        workFinishDate == null -> "La date de fin des travaux doit être remplie."
+        // If your dates are Comparable (e.g., LocalDate), keep this check
+        workStartDate != null && workFinishDate != null && workFinishDate!! < workStartDate!! ->
+            "La date de fin des travaux doit être postérieure ou égale à la date de début."
+
+        type == null -> "Le type doit être sélectionné."
+        selectedClient == null -> "Le client doit être sélectionné."
+        selectedFarmName.isNullOrBlank() -> "Le nom de l'installation doit être rempli."
+        selectedPumpName.isNullOrBlank() -> "Le nom du forage (pompe) doit être rempli."
+        purchaseRequest.isNullOrBlank() -> "Le numéro de demande d'achat doit être rempli."
+        quotation.isNullOrBlank() -> "Le numéro de devis doit être rempli."
+        purchaseOrder.isNullOrBlank() -> "Le numéro de bon de commande doit être rempli."
+        invoice.isNullOrBlank() -> "Le numéro de facture doit être rempli."
+        else -> null
+    }
+
+    fun saveReport(loggedInUser: User, company: Company) {
         screenModelScope.launch {
-            val reportDao = DatabaseProvider.getDatabase().reportDao()
-            val pumpDao = DatabaseProvider.getDatabase().pumpDao()
-            val farmDao = DatabaseProvider.getDatabase().farmDao()
-
-            val validationErrors = listOf(
-                executionOrder to "Le bon d'exécution doit être rempli",
-                requestDate to "La date de demande doit être remplie",
-                workStartDate to "La date de début des travaux doit être remplie",
-                workFinishDate to "La date de fin des travaux doit être remplie",
-                type to "Le type doit être sélectionné",
-                selectedClient to "Le client doit être sélectionné",
-                purchaseRequest to "Le numéro de demande d'achat doit être rempli",
-                purchaseOrder to "Le numéro de bon de commande doit être rempli",
-                quotation to "Le numéro de devis doit être rempli",
-                invoice to "Le numéro de facture doit être rempli"
-            )
-
-            validationErrors.forEach { (field, errorMessage) ->
-                if (field == null) {
-                    state = state.copy(errorMessage = errorMessage)
-                    return@launch
-                }
+            // 1) Validate
+            val error = firstValidationError()
+            if (error != null) {
+                state = state.copy(errorMessage = error)
+                return@launch
             }
 
-            // Get or create the farm
-            val farmId = if (!selectedFarmName.isNullOrEmpty()) {
-                val existingFarms = farmDao.getFarmsByClientId(selectedClient!!.clientId)
-                val existingFarm = existingFarms.find { it.name.equals(selectedFarmName, ignoreCase = true) }
-                existingFarm?.farmId ?: farmDao.insert(
-                    Farm(
-                        name = selectedFarmName!!,
-                        clientOwnerId = selectedClient!!.clientId
-                    )
-                )
-            } else {
-                throw IllegalArgumentException("Farm name cannot be empty.")
-            }
-
-            // Get or create the pump
-            val pumpId = if (!selectedFarmName.isNullOrEmpty()) {
-                val existingPumps = pumpDao.getPumpsByFarmId(farmId)
-                val existingPump = existingPumps.find { it.name.equals(selectedPumpName, ignoreCase = true) }
-                existingPump?.pumpId ?: pumpDao.insert(Pump(name = selectedPumpName!!, farmOwnerId = farmId))
-            } else {
-                throw IllegalArgumentException("Pump name cannot be empty.")
-            }
-
+            // 2) Safe to build
             val newReport = Report(
                 creatorId = loggedInUser.id,
                 executionOrder = executionOrder!!.toLong(),
                 requestDate = requestDate!!,
                 workStartDate = workStartDate!!,
                 workFinishDate = workFinishDate!!,
-                pumpOwnerId = pumpId,
+                clientOwnerId = selectedClient!!.clientId,
                 operators = operators,
                 type = type!!,
-                depth = depth,
+                company = company,
+                wellDrilling = selectedPumpName!!, // "forage/pompe"
+                farm = selectedFarmName!!,
                 staticLevel = staticLevel,
                 dynamicLevel = dynamicLevel,
                 pumpShimming = pumpShimming,
@@ -141,6 +127,7 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 engine = engine,
                 pump = pump,
                 elements = elements,
+                depth = depth,
                 notes = notes,
                 purchaseRequest = purchaseRequest!!,
                 purchaseOrder = purchaseOrder!!,
@@ -149,16 +136,17 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 quotation = quotation!!
             )
 
+            // 3) Persist
+            val reportDao = DatabaseProvider.getDatabase().reportDao()
             if (state.isEditMode && report != null) {
                 reportDao.update(newReport.copy(reportId = report.reportId))
             } else {
                 reportDao.insert(newReport)
-
-                Logger.debug("[Report] Inserted a new report: ")
+                Logger.debug("[Report] Inserted a new report:")
                 Logger.debug("[Report] $newReport")
             }
 
-            state = state.copy(isSaved = true)
+            state = state.copy(errorMessage = null, isSaved = true)
         }
     }
 

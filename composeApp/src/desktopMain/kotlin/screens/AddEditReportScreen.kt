@@ -97,13 +97,11 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                                         onWorkFinishDateChange = { screenModel.workFinishDate = it },
                                         clients = clients,
                                         selectedClient = screenModel.selectedClient,
-                                        fetchFarmNames = { client -> reportsScreenModel.fetchFarmNames(client) },
                                         onSelectedClientChange = {
                                             screenModel.selectedClient = it
                                         },
                                         selectedFarmName = screenModel.selectedFarmName,
                                         onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
-                                        fetchPumpNames = { farmName -> reportsScreenModel.fetchPumpNames(farmName) },
                                         selectedPumpName = screenModel.selectedPumpName,
                                         onSelectedPumpNameChange = { screenModel.selectedPumpName = it },
                                         operators = screenModel.operators,
@@ -211,11 +209,12 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                         ActionButtons(
                             saveReport = {
                                 val loggedInUser = loginScreenModel.loginState.user
+                                val company = loginScreenModel.loginState.company
                                 if (loggedInUser == null) {
                                     Logger.debug("[AddEditReportScreen] ERROR: Logged in user is null")
                                     return@ActionButtons
                                 }
-                                screenModel.saveReport(loggedInUser)
+                                screenModel.saveReport(loggedInUser, company)
                             },
                             onCancel = { navigator.pop() }
                         )

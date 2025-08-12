@@ -33,7 +33,10 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import models.*
+import models.Client
+import models.Company
+import models.Report
+import models.User
 import screenmodels.ClientsScreenModel
 import screenmodels.LoginScreenModel
 import screenmodels.ReportsScreenModel
@@ -63,13 +66,14 @@ class ReportsScreen : Screen {
         var reportToDelete by remember { mutableStateOf<Report?>(null) }
 
         LaunchedEffect(Unit) {
-            screenModel.loadFarms()
-            screenModel.loadPumps()
+            usersScreenModel.loadUsers()
+            clientsScreenModel.loadClients()
             screenModel.loadReports()
         }
 
-        val filteredReports =
-            screenModel.reports.filter { report -> true } // TODO: Add filtering logic based on searchQuery
+        val filteredReports = remember(screenModel.reports, currentCompany) {
+            screenModel.reports.filter { report -> report.company == currentCompany }
+        }
 
         val isLoading = screenModel.isLoading
 
@@ -86,7 +90,8 @@ class ReportsScreen : Screen {
             },
             isDarkMode = Theme.isDarkTheme,
             onToggleTheme = { Theme.toggleTheme() },
-            onFabClick = { navigator.push(AddEditReportScreen()) }
+            onFabClick = { navigator.push(AddEditReportScreen()) },
+            companyLabel = currentCompany.pretty
         ) {
             if (isLoading) {
                 Loading()
@@ -106,8 +111,6 @@ class ReportsScreen : Screen {
                         ReportsList(
                             state = state,
                             reports = filteredReports,
-                            pumps = screenModel.pumps,
-                            farms = screenModel.farms,
                             clients = clientsScreenModel.clients,
                             users = usersScreenModel.users,
                             currentCompany = currentCompany,
@@ -179,8 +182,6 @@ class ReportsScreen : Screen {
     fun ReportsList(
         state: LazyListState,
         reports: List<Report>,
-        pumps: List<Pump>,
-        farms: List<Farm>,
         clients: List<Client>,
         users: List<User>,
         currentCompany: Company,
@@ -199,9 +200,8 @@ class ReportsScreen : Screen {
             }
             items(reports) { report ->
                 val creator = users.firstOrNull { it.id == report.creatorId }
-                val pump = pumps.firstOrNull { it.pumpId == report.pumpOwnerId }
-                val farm = farms.firstOrNull { it.farmId == pump?.farmOwnerId }
-                val client = clients.firstOrNull { it.clientId == farm?.clientOwnerId }
+                println(clients + " " + report.clientOwnerId)
+                val client = clients.firstOrNull { it.clientId == report.clientOwnerId }
 
                 var expanded by remember { mutableStateOf(false) }
                 var menuExpanded by remember { mutableStateOf(false) }
@@ -243,12 +243,12 @@ class ReportsScreen : Screen {
                     )
 
                     Text(
-                        pump?.name ?: "Inconnu",
+                        report.wellDrilling,
                         modifier = Modifier.weight(2f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
                     Text(
-                        farm?.name ?: "Inconnu",
+                        report.farm,
                         modifier = Modifier.weight(2f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
@@ -272,8 +272,8 @@ class ReportsScreen : Screen {
                                     report,
                                     client?.name ?: "",
                                     creator?.username ?: "",
-                                    farm?.name ?: "",
-                                    pump?.name ?: "",
+                                    report.farm,
+                                    report.wellDrilling,
                                     currentCompany
                                 )
                             },
@@ -433,17 +433,17 @@ class ReportsScreen : Screen {
                                             text = "Installation:",
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                                         )
-                                        Text(farm?.name ?: "Inconnu")
+                                        Text(report.farm)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Pompe:",
+                                            text = "Forage:",
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                                         )
-                                        Text(pump?.name ?: "Inconnu")
+                                        Text(report.wellDrilling)
                                     }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),

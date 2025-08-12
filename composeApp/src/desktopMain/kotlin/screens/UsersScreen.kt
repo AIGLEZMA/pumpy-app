@@ -71,7 +71,8 @@ class UsersScreen : Screen {
             },
             isDarkMode = Theme.isDarkTheme,
             onToggleTheme = { Theme.toggleTheme() },
-            onFabClick = { navigator.push(AddEditUserScreen()) }
+            onFabClick = { navigator.push(AddEditUserScreen()) },
+            companyLabel = loginState.company.pretty
         ) {
             if (isLoading) {
                 Loading()

@@ -10,7 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -39,6 +46,14 @@ class LoginScreen : Screen {
 
         var selectedCompany by remember { mutableStateOf(Company.MAGRINOV) }
 
+        val focusManager = LocalFocusManager.current
+
+        fun submit() {
+            if (!loginState.isLoading) {
+                screenModel.login(username.trim(), password, selectedCompany)
+            }
+        }
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -65,6 +80,13 @@ class LoginScreen : Screen {
                         label = { Text("Nom d'utilisateur") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(0.21f)
+                            .onPreviewKeyEvent { e ->
+                                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                                    focusManager.moveFocus(FocusDirection.Next)
+                                    true
+                                } else false
+                            }
+
                     )
                     OutlinedTextField(
                         value = password,
@@ -83,6 +105,12 @@ class LoginScreen : Screen {
                             }
                         },
                         modifier = Modifier.fillMaxWidth(0.21f)
+                            .onPreviewKeyEvent { e ->
+                                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                                    submit()
+                                    true
+                                } else false
+                            }
                     )
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier

@@ -8,13 +8,11 @@ import kotlinx.coroutines.Dispatchers
 import models.*
 import kotlin.io.path.Path
 
-@Database(entities = [User::class, Client::class, Farm::class, Pump::class, Report::class], version = 5)
+@Database(entities = [User::class, Client::class, Report::class], version = 5)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun clientDao(): ClientDao
-    abstract fun farmDao(): FarmDao
-    abstract fun pumpDao(): PumpDao
     abstract fun reportDao(): ReportDao
 }
 

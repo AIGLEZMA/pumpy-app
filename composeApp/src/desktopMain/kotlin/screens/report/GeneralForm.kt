@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -14,7 +14,6 @@ import models.Report
 import screens.spaceBetweenFields
 import ui.AutoCompleteTextField
 import ui.DatePickerAndTextField
-import ui.FlexibleAutoCompleteTextField
 import ui.NumberTextField
 import java.time.LocalDate
 
@@ -31,10 +30,8 @@ fun GeneralForm(
     clients: List<Client>,
     selectedClient: Client?,
     onSelectedClientChange: (Client?) -> Unit,
-    fetchFarmNames: (Client) -> List<String>,
     selectedFarmName: String?,
     onSelectedFarmNameChange: (String?) -> Unit,
-    fetchPumpNames: (String) -> List<String>,
     selectedPumpName: String?,
     onSelectedPumpNameChange: (String?) -> Unit,
     operators: List<String>,
@@ -73,45 +70,30 @@ fun GeneralForm(
         label = "Client",
         items = clients,
         selectedItem = selectedClient,
-        onSelectedItemChange = { client ->
-            onSelectedClientChange(client)
-            onSelectedFarmNameChange(null) // Reset farm and pump when client changes
-            onSelectedPumpNameChange(null)
-        },
+        onSelectedItemChange = { client -> onSelectedClientChange(client) },
         displayText = { client -> client.name },
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
-    selectedClient?.let {
-        val farmNames = fetchFarmNames(selectedClient)
-        FlexibleAutoCompleteTextField(
-            label = "Installation",
-            value = selectedFarmName,
-            source = farmNames,
-            onSelect = { farmName ->
-                onSelectedFarmNameChange(farmName)
-                onSelectedPumpNameChange(null)
-            },
-            onValueChange = { farmName ->
-                onSelectedFarmNameChange(farmName)
-            },
-            displayText = { it },
-            modifier = modifier.fillMaxWidth()
-        )
-    }
+    OutlinedTextField(
+        value = selectedFarmName ?: "",
+        onValueChange = {
+            onSelectedFarmNameChange(it)
+        },
+        label = { Text("Installation") },
+        singleLine = true,
+        modifier = modifier.fillMaxWidth()
+    )
     Spacer(modifier = spaceBetweenFields)
-    if (!selectedFarmName.isNullOrBlank()) {
-        val pumpNames = fetchPumpNames(selectedFarmName)
-        FlexibleAutoCompleteTextField(
-            label = "Pompe",
-            value = selectedPumpName,
-            source = pumpNames,
-            onSelect = { pumpName -> onSelectedPumpNameChange(pumpName) },
-            onValueChange = { pumpName -> onSelectedPumpNameChange(pumpName) },
-            displayText = { it },
-            modifier = modifier.fillMaxWidth()
-        )
-    }
+    OutlinedTextField(
+        value = selectedPumpName ?: "",
+        onValueChange = {
+            onSelectedPumpNameChange(it)
+        },
+        label = { Text("Forage") },
+        singleLine = true,
+        modifier = modifier.fillMaxWidth()
+    )
     Spacer(modifier = spaceBetweenFields)
     OperatorForm(
         operators = operators,
@@ -121,52 +103,11 @@ fun GeneralForm(
         modifier = modifier.fillMaxWidth()
     )
     Spacer(modifier = spaceBetweenFields)
-    OperationTypeDropdown(
+    OperationTypeBreadcrumb(
         selectedType = selectedType,
         onTypeSelected = onTypeSelected,
         modifier = modifier.fillMaxWidth()
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun OperationTypeDropdown(
-    selectedType: Report.OperationType?,
-    onTypeSelected: (Report.OperationType) -> Unit,
-    modifier: Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier = modifier) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = selectedType?.beautiful ?: "Sélectionner un type",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Type d'opération") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                Report.OperationType.entries.forEach { type ->
-                    DropdownMenuItem(
-                        text = { Text(type.beautiful) },
-                        onClick = {
-                            onTypeSelected(type)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -210,3 +151,40 @@ fun OperatorForm(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OperationTypeBreadcrumb(
+    selectedType: Report.OperationType?,
+    onTypeSelected: (Report.OperationType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Map your enum names (adjust DISASSEMBLY if your enum uses another name)
+    val assembly = Report.OperationType.ASSEMBLY
+    val disassembly = Report.OperationType.DISASSEMBLY
+
+    Column(modifier = modifier) {
+        Text(
+            text = "Type d'opération",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            SegmentedButton(
+                selected = selectedType == assembly,
+                onClick = { onTypeSelected(assembly) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                label = { Text("Montage") }
+            )
+            SegmentedButton(
+                selected = selectedType == disassembly,
+                onClick = { onTypeSelected(disassembly) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                label = { Text("Démontage") }
+            )
+        }
+    }
+}
+

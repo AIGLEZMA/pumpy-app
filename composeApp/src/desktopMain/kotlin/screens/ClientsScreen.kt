@@ -70,7 +70,8 @@ class ClientsScreen : Screen {
             },
             isDarkMode = Theme.isDarkTheme,
             onToggleTheme = { Theme.toggleTheme() },
-            onFabClick = { navigator.push(AddEditClientScreen()) }
+            onFabClick = { navigator.push(AddEditClientScreen()) },
+            companyLabel = loginScreenModel.loginState.company.pretty
         ) {
             // TODO: no clients view
             if (isLoading) {
