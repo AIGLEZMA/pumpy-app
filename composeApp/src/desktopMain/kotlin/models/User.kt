@@ -7,15 +7,8 @@ data class User(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val username: String,
     val password: String,
-    val isAdmin: Boolean = false,
-    val company: Company
+    val isAdmin: Boolean = false
 )
-
-enum class Company(val pretty: String) {
-    MAGRINOV("Magrinov"),
-    LOTRAX("Lotrax"),
-    UNKNOWN("N/A")
-}
 
 @Dao
 interface UserDao {

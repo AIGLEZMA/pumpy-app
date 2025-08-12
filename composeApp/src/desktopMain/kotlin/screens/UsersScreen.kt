@@ -161,8 +161,6 @@ class UsersScreen : Screen {
                 val firstLetter = user.username.firstOrNull()?.uppercase() ?: "?"
                 val supportingText = buildString {
                     append(if (user.isAdmin) "Administrateur" else "Normal")
-                    append(" - ")
-                    append(user.company.pretty)
                 }
                 ListItem(
                     modifier = Modifier.fillMaxWidth(),

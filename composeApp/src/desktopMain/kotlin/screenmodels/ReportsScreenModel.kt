@@ -107,47 +107,67 @@ class ReportsScreenModel : ScreenModel {
         screenModelScope.launch {
             withContext(Dispatchers.IO) {
                 val parentFrame = Frame()
-                val fileDialog = FileDialog(parentFrame, "Sauvegarder le rapport", FileDialog.SAVE)
+                try {
+                    val fileDialog = FileDialog(parentFrame, "Sauvegarder le rapport", FileDialog.SAVE)
 
-                // Set a default file name based on the report.
-                fileDialog.file = "Rapport ${report.reportId}.pdf"
-                fileDialog.filenameFilter = FilenameFilter { _, name ->
-                    name.endsWith(".pdf")
-                }
+                    // Suggest a default name with .pdf
+                    val suggested = "Rapport ${report.reportId}.pdf"
+                    fileDialog.file = suggested
 
-                // Show the dialog. This call is blocking until the user closes it.
-                fileDialog.isVisible = true
+                    // (Note: FilenameFilter here does not enforce the extension on SAVE)
+                    fileDialog.filenameFilter = FilenameFilter { _, name -> name.lowercase().endsWith(".pdf") }
 
-                // Get the result. If directory and file are not null, the user chose a location.
-                val selectedDirectory = fileDialog.directory
-                val selectedFile = fileDialog.file
+                    fileDialog.isVisible = true
 
-                if (selectedDirectory != null && selectedFile != null) {
-                    val outputPath = Paths.get(selectedDirectory, selectedFile)
+                    val dir = fileDialog.directory
+                    var file = fileDialog.file
 
-                    try {
-                        generateReport(
-                            report = report,
-                            clientUsername = clientUsername,
-                            creatorName = creatorName,
-                            farmName = farmName,
-                            pumpName = pumpName,
-                            company = company,
-                            outputPath = outputPath.toString()
-                        )
-                        Logger.debug("[Report] Saving pdf done!")
-                        // TODO: Add a UI notification to the user that the file was saved.
-                    } catch (e: Exception) {
-                        Logger.error("[Report] Error saving file: ${e.message}", e)
-                        // TODO: Add a UI notification to the user about the error.
+                    if (dir != null && file != null) {
+                        // Ensure .pdf extension
+                        if (!file.lowercase().endsWith(".pdf")) file += ".pdf"
+
+                        val outputPath = Paths.get(dir, file)
+
+                        // Optional: confirm overwrite if exists
+                        if (java.nio.file.Files.exists(outputPath)) {
+                            Logger.debug("[Report] Overwriting existing file: $outputPath")
+                            // You can add a UI confirmation here if you want
+                        }
+
+                        try {
+                            generateReport(
+                                report = report,
+                                clientUsername = clientUsername,
+                                creatorName = creatorName,
+                                farmName = farmName,
+                                pumpName = pumpName,
+                                company = company,
+                                outputPath = outputPath.toString()
+                            )
+
+                            // Optional sanity check: does file start with %PDF- ?
+                            val header = java.nio.file.Files.newInputStream(outputPath).use { ins ->
+                                ByteArray(5).also { ins.read(it) }
+                            }
+                            val isPdf = String(header) == "%PDF-"
+                            if (!isPdf) {
+                                Logger.debug("[Report] Saved file does not appear to be a valid PDF (missing %PDF- header): $outputPath")
+                            }
+
+                            Logger.debug("[Report] Saving pdf done: $outputPath")
+                            // TODO: UI toast/snackbar: "Rapport enregistré : $outputPath"
+                        } catch (e: Exception) {
+                            Logger.error("[Report] Error saving file: ${e.message}", e)
+                            // TODO: UI error notification
+                        }
+                    } else {
+                        Logger.debug("[Report] Save operation cancelled by user.")
                     }
-                } else {
-                    Logger.debug("[Report] Save operation cancelled by user.")
+                } finally {
+                    parentFrame.dispose()
                 }
-
-                // Dispose of the dummy frame to free up resources.
-                parentFrame.dispose()
             }
         }
     }
+
 }

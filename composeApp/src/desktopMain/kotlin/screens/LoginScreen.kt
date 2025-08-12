@@ -1,6 +1,7 @@
 package screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -9,12 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.*
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -23,6 +22,7 @@ import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import models.Company
 import screenmodels.LoginScreenModel
 
 class LoginScreen : Screen {
@@ -37,39 +37,14 @@ class LoginScreen : Screen {
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
 
-        val usernameFocusRequester = remember { FocusRequester() }
-        val passwordFocusRequester = remember { FocusRequester() }
-        val loginButtonFocusRequester = remember { FocusRequester() }
-
-        var usernameIsFocused by remember { mutableStateOf(false) }
-        var passwordIsFocused by remember { mutableStateOf(false) }
-        var loginButtonIsFocused by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) {
-            usernameFocusRequester.requestFocus()
-        }
+        var selectedCompany by remember { mutableStateOf(Company.MAGRINOV) }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .onKeyEvent { keyEvent ->
-                        // We only handle the Enter key here. Tab will be handled by the system's focus traversal.
-                        if (keyEvent.type == KeyEventType.KeyUp) {
-                            when (keyEvent.key) {
-                                Key.Enter -> {
-                                    if (passwordIsFocused || loginButtonIsFocused) {
-                                        screenModel.login(username, password)
-                                        return@onKeyEvent true
-                                    }
-                                }
-                            }
-                        }
-                        false
-                    },
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -89,19 +64,14 @@ class LoginScreen : Screen {
                         onValueChange = { username = it },
                         label = { Text("Nom d'utilisateur") },
                         singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth(0.21f)
-                            .focusRequester(usernameFocusRequester)
-                            .onFocusChanged { focusState -> usernameIsFocused = focusState.isFocused }
-                            .focusProperties {
-                                next = passwordFocusRequester
-                            }
+                        modifier = Modifier.fillMaxWidth(0.21f)
                     )
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
                             password = it.filterNot { char -> char in listOf('\t', '\n') }
                         },
+                        singleLine = true,
                         label = { Text("Mot de passe") },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -112,29 +82,33 @@ class LoginScreen : Screen {
                                 Icon(imageVector = image, contentDescription = description)
                             }
                         },
+                        modifier = Modifier.fillMaxWidth(0.21f)
+                    )
+                    SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
                             .fillMaxWidth(0.21f)
-                            .focusRequester(passwordFocusRequester)
-                            .onFocusChanged { focusState -> passwordIsFocused = focusState.isFocused }
-                            .focusProperties {
-                                previous = usernameFocusRequester
-                                next = loginButtonFocusRequester
-                            }
-                    )
+                            .semantics { role = Role.Tab } // makes it clear for a11y
+                            .selectableGroup()
+                    ) {
+                        val options = listOf(Company.MAGRINOV, Company.LOTRAX)
+                        options.forEachIndexed { index, company ->
+                            SegmentedButton(
+                                selected = selectedCompany == company,
+                                onClick = { selectedCompany = company },
+                                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                                label = { Text(company.pretty) }
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
-                        onClick = { screenModel.login(username, password) },
+                        onClick = { screenModel.login(username, password, selectedCompany) },
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier
                             .fillMaxWidth(0.21f)
                             .height(54.dp) // Set a fixed height that matches the text fields
-                            .focusRequester(loginButtonFocusRequester)
-                            .onFocusChanged { focusState -> loginButtonIsFocused = focusState.isFocused }
-                            .focusProperties {
-                                previous = passwordFocusRequester
-                            }
                     ) {
                         Text(text = "Connexion", color = Color.White)
                     }

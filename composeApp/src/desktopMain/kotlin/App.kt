@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.Navigator
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
-import models.Company
 import models.User
 import screens.LoginScreen
 import screens.SplashScreen
@@ -32,7 +31,7 @@ fun App() {
             val adminPassword = System.getenv("ADMIN_PASSWORD") ?: "admin"
             val hashedPassword = Password.hash(adminPassword)
             database.userDao()
-                .insert(User(username = "admin", password = hashedPassword, isAdmin = true, company = Company.LOTRAX))
+                .insert(User(username = "admin", password = hashedPassword, isAdmin = true))
             Logger.debug("[Database] Admin user created during app startup.")
         }
 

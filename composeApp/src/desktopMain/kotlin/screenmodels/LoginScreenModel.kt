@@ -11,13 +11,14 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import models.Company
 import models.User
 
 class LoginScreenModel : ScreenModel {
     var loginState by mutableStateOf(LoginState())
         private set
 
-    fun login(username: String, password: String) {
+    fun login(username: String, password: String, company: Company) {
         Logger.debug("[Login] Logging in as $username")
         screenModelScope.launch {
             loginState = loginState.copy(isLoading = true)
@@ -32,7 +33,7 @@ class LoginScreenModel : ScreenModel {
                 }
 
                 loginState = if (isPasswordCorrect) {
-                    LoginState(user = user, isAuthenticated = true)
+                    LoginState(user = user, isAuthenticated = true, company = company)
                 } else {
                     LoginState(errorMessage = "Mot de passe incorrecte")
                 }
@@ -49,7 +50,8 @@ class LoginScreenModel : ScreenModel {
             user = null,
             isAuthenticated = false,
             errorMessage = null,
-            isLoading = false
+            isLoading = false,
+            company = Company.UNKNOWN
         )
     }
 
@@ -57,6 +59,7 @@ class LoginScreenModel : ScreenModel {
         val user: User? = null,
         val isAuthenticated: Boolean = false,
         val errorMessage: String? = null,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val company: Company = Company.UNKNOWN
     )
 }

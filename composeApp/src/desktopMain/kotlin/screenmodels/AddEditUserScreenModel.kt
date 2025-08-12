@@ -11,7 +11,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import models.Company
 import models.User
 
 class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
@@ -24,13 +23,12 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
             userState = userState.copy(
                 username = user.username,
                 password = "",
-                company = user.company,
                 isEditMode = true
             )
         }
     }
 
-    fun saveUser(username: String, password: String, company: Company) {
+    fun saveUser(username: String, password: String) {
         screenModelScope.launch {
             val userDao = DatabaseProvider.getDatabase().userDao()
             if (username.isEmpty() || password.isEmpty()) {
@@ -50,10 +48,10 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
                     Logger.debug("[User] Attempted to save user but the user instance is null (username: $username)")
                     return@launch
                 }
-                userDao.update(user.copy(username = username, password = hashedPassword, company = company))
+                userDao.update(user.copy(username = username, password = hashedPassword))
                 Logger.debug("[User] Updated user (username: $username)")
             } else {
-                val newUser = User(username = username, password = hashedPassword, company = company)
+                val newUser = User(username = username, password = hashedPassword)
                 userDao.insert(newUser)
                 Logger.debug("[User] Adding new user (username: $username)")
             }
@@ -64,7 +62,6 @@ class AddEditUserScreenModel(private val user: User? = null) : ScreenModel {
     data class UserState(
         val username: String = "",
         val password: String = "",
-        val company: Company = Company.MAGRINOV,
         val errorMessage: String? = null,
         val isEditMode: Boolean = false,
         val isSaved: Boolean = false

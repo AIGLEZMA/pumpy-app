@@ -57,6 +57,8 @@ class ReportsScreen : Screen {
         val usersScreenModel = rememberScreenModel { UsersScreenModel() }
         val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
+        val currentCompany: Company = loginScreenModel.loginState.company
+
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var reportToDelete by remember { mutableStateOf<Report?>(null) }
 
@@ -108,6 +110,7 @@ class ReportsScreen : Screen {
                             farms = screenModel.farms,
                             clients = clientsScreenModel.clients,
                             users = usersScreenModel.users,
+                            currentCompany = currentCompany,
                             onReportEditClick = {
                                 navigator.push(AddEditReportScreen(it))
                             }, // TODO: Add permissions check
@@ -180,6 +183,7 @@ class ReportsScreen : Screen {
         farms: List<Farm>,
         clients: List<Client>,
         users: List<User>,
+        currentCompany: Company,
         onReportEditClick: (Report) -> Unit,
         onReportSaveClick: (Report, String, String, String, String, Company) -> Unit,
         onReportPrintClick: (Report) -> Unit,
@@ -270,7 +274,7 @@ class ReportsScreen : Screen {
                                     creator?.username ?: "",
                                     farm?.name ?: "",
                                     pump?.name ?: "",
-                                    creator?.company ?: Company.UNKNOWN
+                                    currentCompany
                                 )
                             },
                             modifier = Modifier.size(24.dp)

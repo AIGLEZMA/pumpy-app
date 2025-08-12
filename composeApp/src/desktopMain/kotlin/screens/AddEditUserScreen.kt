@@ -17,10 +17,8 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import models.Company
 import models.User
 import screenmodels.AddEditUserScreenModel
-import java.util.Locale.getDefault
 
 class AddEditUserScreen(private val user: User? = null) : Screen {
 
@@ -34,11 +32,6 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
         var username by remember { mutableStateOf(userState.username) }
         var password by remember { mutableStateOf(userState.password) }
         var passwordVisible by remember { mutableStateOf(false) }
-
-        var company by remember { mutableStateOf(userState.company) }
-        var expanded by remember { mutableStateOf(false) }
-        val companies = listOf(Company.MAGRINOV.pretty, Company.LOTRAX.pretty)
-        var selectedCompanyText by remember { mutableStateOf(userState.company.pretty) }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -84,39 +77,8 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
                     modifier = Modifier.fillMaxWidth(0.21f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.fillMaxWidth(0.21f)
-                ) {
-                    OutlinedTextField(
-                        modifier = Modifier.menuAnchor(),
-                        readOnly = true,
-                        value = selectedCompanyText,
-                        onValueChange = {},
-                        label = { Text("Entreprise") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        colors = ExposedDropdownMenuDefaults.textFieldColors()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        companies.forEach { companyOption ->
-                            DropdownMenuItem(
-                                text = { Text(companyOption) },
-                                onClick = {
-                                    selectedCompanyText = companyOption
-                                    company = Company.valueOf(companyOption.uppercase(getDefault()))
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { screenModel.saveUser(username, password, company) },
+                    onClick = { screenModel.saveUser(username, password) },
                     modifier = Modifier.fillMaxWidth(0.21f)
                 ) {
                     Text(text = "Enregister")
