@@ -44,12 +44,18 @@ import screenmodels.UsersScreenModel
 import ui.DeleteConfirmationDialog
 import ui.Layout
 import ui.Loading
+import java.text.Normalizer
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 class ReportsScreen : Screen {
 
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH)
+
+    private fun String.folded(): String =
+        Normalizer.normalize(this, Normalizer.Form.NFD)
+            .replace("\\p{M}+".toRegex(), "")
+            .lowercase(Locale.getDefault())
 
     @Preview
     @Composable
@@ -74,9 +80,27 @@ class ReportsScreen : Screen {
             reportsModel.loadReports()
         }
 
-        // Derive list for this company (you can also fold searchQuery here later)
-        val filteredReports by remember(reportsModel.reports, currentCompany) {
-            derivedStateOf { reportsModel.reports.filter { it.company == currentCompany } }
+        // Build a clients lookup (used for filtering + list)
+        val clientsById = remember(clientsModel.clients) {
+            clientsModel.clients.associateBy { it.clientId }
+        }
+
+        // Filter by company AND (if provided) by client's name
+        val filteredReports by remember(
+            reportsModel.reports, currentCompany, searchQuery, clientsModel.clients
+        ) {
+            derivedStateOf {
+                val q = searchQuery.trim().folded()
+                reportsModel.reports
+                    .asSequence()
+                    .filter { it.company == currentCompany }
+                    .filter { report ->
+                        if (q.isEmpty()) return@filter true
+                        val clientName = clientsById[report.clientOwnerId]?.name.orEmpty().folded()
+                        clientName.contains(q)
+                    }
+                    .toList()
+            }
         }
 
         val isLoading = reportsModel.isLoading
