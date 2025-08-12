@@ -20,6 +20,8 @@ fun Header(
     onLogout: () -> Unit,
     isDarkMode: Boolean,
     onToggleTheme: () -> Unit,
+    autoOpenAfterSave: Boolean,
+    onAutoOpenAfterSaveChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -44,7 +46,12 @@ fun Header(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        SettingsMenu(isDarkMode = isDarkMode, onToggleTheme = onToggleTheme)
+        SettingsMenu(
+            isDarkMode = isDarkMode,
+            onToggleTheme = onToggleTheme,
+            autoOpenAfterSave = autoOpenAfterSave,
+            onAutoOpenAfterSaveChange = onAutoOpenAfterSaveChange
+        )
     }
 }
 
@@ -78,7 +85,12 @@ fun AccountMenu(onLogout: () -> Unit) {
 }
 
 @Composable
-fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
+fun SettingsMenu(
+    isDarkMode: Boolean,
+    onToggleTheme: () -> Unit,
+    autoOpenAfterSave: Boolean,
+    onAutoOpenAfterSaveChange: (Boolean) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Box {
@@ -94,15 +106,43 @@ fun SettingsMenu(isDarkMode: Boolean, onToggleTheme: () -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
+            // Theme toggle (existing)
             DropdownMenuItem(
                 text = { Text(if (isDarkMode) "Mode clair" else "Mode sombre") },
                 onClick = {
                     onToggleTheme()
                     expanded = false
-                })
+                }
+            )
+
+            Divider()
+
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Ouvrir le PDF après enregistrement", modifier = Modifier.weight(1f))
+                        // Switch inside the menu; keeps UX clear & compact
+                        Switch(
+                            checked = autoOpenAfterSave,
+                            onCheckedChange = { checked ->
+                                onAutoOpenAfterSaveChange(checked)
+                                // Keep menu open after toggle for nicer UX
+                            }
+                        )
+                    }
+                },
+                // Also toggle if the row itself is clicked
+                onClick = {
+                    onAutoOpenAfterSaveChange(!autoOpenAfterSave)
+                }
+            )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

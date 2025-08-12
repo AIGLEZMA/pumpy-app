@@ -22,6 +22,8 @@ fun Layout(
     onToggleTheme: () -> Unit,
     onFabClick: () -> Unit,
     companyLabel: String,
+    autoOpenAfterSave: Boolean,
+    onAutoOpenAfterSaveChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -40,6 +42,8 @@ fun Layout(
                     onLogout = onLogout,
                     isDarkMode = isDarkMode,
                     onToggleTheme = onToggleTheme,
+                    autoOpenAfterSave = autoOpenAfterSave,
+                    onAutoOpenAfterSaveChange = onAutoOpenAfterSaveChange,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 )
             },

@@ -31,6 +31,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Client
 import screenmodels.ClientsScreenModel
 import screenmodels.LoginScreenModel
+import screenmodels.ReportsScreenModel
 import ui.DeleteConfirmationDialog
 import ui.Layout
 import ui.Loading
@@ -43,6 +44,7 @@ class ClientsScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val clientsModel = rememberScreenModel { ClientsScreenModel() }
         val loginModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
+        val reportsModel = navigator.rememberNavigatorScreenModel { ReportsScreenModel() }
 
         var searchQuery by rememberSaveable { mutableStateOf("") }
         var clientToDelete by remember { mutableStateOf<Client?>(null) }
@@ -79,7 +81,10 @@ class ClientsScreen : Screen {
             isDarkMode = Theme.isDarkTheme,
             onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditClientScreen()) },
-            companyLabel = loginModel.loginState.company.pretty
+            companyLabel = loginModel.loginState.company.pretty,
+            // ...existing args...
+            autoOpenAfterSave = reportsModel.autoOpenAfterSave,
+            onAutoOpenAfterSaveChange = { reportsModel.autoOpenAfterSave = it }
         ) {
             if (isLoading) {
                 Loading()
