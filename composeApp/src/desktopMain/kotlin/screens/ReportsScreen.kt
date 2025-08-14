@@ -158,7 +158,7 @@ class ReportsScreen : Screen {
             onFabClick = { navigator.push(AddEditReportScreen()) },
             companyLabel = currentCompany.pretty,
             autoOpenAfterSave = reportsModel.autoOpenAfterSave,
-            onAutoOpenAfterSaveChange = { reportsModel.autoOpenAfterSave = it }
+            onAutoOpenAfterSaveChange = { reportsModel.updateAutoOpenAfterSave(it) }
         ) {
             // Wrap content so we can overlay the SnackbarHost at bottom
             Box(Modifier.fillMaxSize()) {

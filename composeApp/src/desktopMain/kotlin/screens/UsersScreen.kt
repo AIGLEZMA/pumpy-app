@@ -92,7 +92,7 @@ class UsersScreen : Screen {
             onFabClick = { navigator.push(AddEditUserScreen()) },
             companyLabel = loginState.company.pretty,
             autoOpenAfterSave = reportsModel.autoOpenAfterSave,
-            onAutoOpenAfterSaveChange = { reportsModel.autoOpenAfterSave = it }
+            onAutoOpenAfterSaveChange = { reportsModel.updateAutoOpenAfterSave(it) }
         ) {
             if (isLoading) {
                 Loading()

@@ -82,9 +82,8 @@ class ClientsScreen : Screen {
             onToggleTheme = { Theme.toggleTheme() },
             onFabClick = { navigator.push(AddEditClientScreen()) },
             companyLabel = loginModel.loginState.company.pretty,
-            // ...existing args...
             autoOpenAfterSave = reportsModel.autoOpenAfterSave,
-            onAutoOpenAfterSaveChange = { reportsModel.autoOpenAfterSave = it }
+            onAutoOpenAfterSaveChange = { reportsModel.updateAutoOpenAfterSave(it) }
         ) {
             if (isLoading) {
                 Loading()

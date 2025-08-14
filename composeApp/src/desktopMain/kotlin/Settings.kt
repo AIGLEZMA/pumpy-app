@@ -1,13 +1,40 @@
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 
 @Serializable
 data class AppSettings(
-    val isDarkTheme: Boolean = false
+    val isDarkTheme: Boolean = false,
+    val autoOpenPDF: Boolean = false
 )
 
-object SettingsManager {
+object SettingsRepository {
+    // Initialize from disk exactly once
+    private val _settings = MutableStateFlow(Settings.loadSettings())
+    val settings: StateFlow<AppSettings> get() = _settings
+
+    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val mutex = Mutex()
+
+    fun update(transform: (AppSettings) -> AppSettings) {
+        ioScope.launch {
+            mutex.withLock {
+                val updated = transform(_settings.value)
+                Settings.saveSettings(updated)
+                _settings.value = updated
+            }
+        }
+    }
+}
+
+object Settings {
     private val json = Json { prettyPrint = true }
 
     private val settingsFile: File by lazy {

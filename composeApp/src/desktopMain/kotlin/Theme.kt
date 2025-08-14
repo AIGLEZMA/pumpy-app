@@ -27,19 +27,19 @@ val DarkColorScheme = darkColorScheme(
     onSurface = Color(0xFFE5E1E6)
 )
 
+@OptIn(DelicateCoroutinesApi::class)
 object Theme {
-    private val initialSettings = SettingsManager.loadSettings()
 
-    var isDarkTheme by mutableStateOf(initialSettings.isDarkTheme)
+    var isDarkTheme by mutableStateOf(SettingsRepository.settings.value.isDarkTheme)
         private set
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun toggleTheme() {
-        isDarkTheme = !isDarkTheme
-
-        // Save the updated theme setting asynchronously
-        GlobalScope.launch(Dispatchers.IO) {
-            SettingsManager.saveSettings(AppSettings(isDarkTheme))
+    init {
+        GlobalScope.launch(Dispatchers.Main.immediate) {
+            SettingsRepository.settings.collect { s -> isDarkTheme = s.isDarkTheme }
         }
+    }
+
+    fun toggleTheme() {
+        SettingsRepository.update { it.copy(isDarkTheme = !it.isDarkTheme) }
     }
 }

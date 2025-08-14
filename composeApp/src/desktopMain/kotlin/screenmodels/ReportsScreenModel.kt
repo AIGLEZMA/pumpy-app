@@ -2,6 +2,7 @@ package screenmodels
 
 import DatabaseProvider
 import Logger
+import SettingsRepository
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,13 +35,22 @@ class ReportsScreenModel : ScreenModel {
     val events: SharedFlow<UiEvent> get() = _events
 
     // Toggle controlled by UI
-    var autoOpenAfterSave by mutableStateOf(false)
+    var autoOpenAfterSave by mutableStateOf(SettingsRepository.settings.value.autoOpenPDF)
+        private set
 
     private fun osName() = System.getProperty("os.name").lowercase()
 
     init {
         loadReports()
+        screenModelScope.launch {
+            SettingsRepository.settings.collect { s -> autoOpenAfterSave = s.autoOpenPDF }
+        }
     }
+
+    fun updateAutoOpenAfterSave(value: Boolean) {
+        SettingsRepository.update { it.copy(autoOpenPDF = value) }
+    }
+
 
     fun loadReports() {
         Logger.debug("[Report] Loading reports...")
