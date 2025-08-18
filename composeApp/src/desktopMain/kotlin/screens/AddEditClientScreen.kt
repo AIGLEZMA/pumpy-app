@@ -11,18 +11,21 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Client
 import screenmodels.AddEditClientScreenModel
+import screenmodels.LoginScreenModel
 
 class AddEditClientScreen(private val client: Client? = null) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val loginScreenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
         val screenModel = rememberScreenModel { AddEditClientScreenModel(client) }
 
         val clientState = screenModel.clientState
@@ -40,12 +43,13 @@ class AddEditClientScreen(private val client: Client? = null) : Screen {
         }
 
         fun submit() {
+            val company = loginScreenModel.loginState.company
             val trimmedName = name.trim()
             val trimmedPhone = phoneNumber.trim()
             val trimmedLocation = location.trim()
             phoneNumberError = validatePhone(trimmedPhone)
             if (phoneNumberError == null) {
-                screenModel.saveClient(trimmedName, trimmedPhone, trimmedLocation)
+                screenModel.saveClient(trimmedName, trimmedPhone, trimmedLocation, company)
             }
         }
 

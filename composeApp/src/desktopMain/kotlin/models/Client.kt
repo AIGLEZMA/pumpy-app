@@ -7,7 +7,8 @@ data class Client(
     @PrimaryKey(autoGenerate = true) val clientId: Long = 0,
     val name: String,
     val phoneNumber: String,
-    val location: String
+    val location: String,
+    val company: Company
 )
 
 @Dao

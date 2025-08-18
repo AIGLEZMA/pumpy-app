@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.launch
 import models.Client
+import models.Company
 
 class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel {
     var clientState by mutableStateOf(ClientState())
@@ -26,7 +27,7 @@ class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel
         }
     }
 
-    fun saveClient(name: String, phoneNumber: String, location: String) {
+    fun saveClient(name: String, phoneNumber: String, location: String, company: Company) {
         screenModelScope.launch {
             val clientDao = DatabaseProvider.getDatabase().clientDao()
             if (name.isEmpty() || phoneNumber.isEmpty() || location.isEmpty()) {
@@ -40,10 +41,17 @@ class AddEditClientScreenModel(private val client: Client? = null) : ScreenModel
                     Logger.debug("[Client] Attempted to save client but the client instance is null (name: $name)")
                     return@launch
                 }
-                clientDao.update(client.copy(name = name, phoneNumber = phoneNumber, location = location))
+                clientDao.update(
+                    client.copy(
+                        name = name,
+                        phoneNumber = phoneNumber,
+                        location = location,
+                        company = company
+                    )
+                )
                 Logger.debug("[Client] Updated client (name: $name)")
             } else {
-                val newClient = Client(name = name, phoneNumber = phoneNumber, location = location)
+                val newClient = Client(name = name, phoneNumber = phoneNumber, location = location, company = company)
                 clientDao.insert(newClient)
                 Logger.debug("[Client] Adding new client (name: $name)")
             }

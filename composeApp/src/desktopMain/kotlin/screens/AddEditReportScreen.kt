@@ -41,7 +41,8 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
         val screenModel = rememberScreenModel { AddEditReportScreenModel(report) }
 
         val state = screenModel.state
-        val clients = clientsScreenModel.clients
+        val company = loginScreenModel.loginState.company
+        val clients = clientsScreenModel.clients.filter { it.company == company }
 
         // Ensure clients are loaded for the autocomplete
         LaunchedEffect(clientsScreenModel) {

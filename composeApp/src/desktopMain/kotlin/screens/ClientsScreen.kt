@@ -57,11 +57,14 @@ class ClientsScreen : Screen {
         val isLoading = clientsModel.isLoading
 
         // Derive filtered (and sorted) clients efficiently
-        val filteredClients by remember(clientsModel.clients, searchQuery) {
+        val filteredClients by remember(clientsModel.clients, searchQuery, loginModel.loginState.company) {
             derivedStateOf {
                 clientsModel.clients
                     .asSequence()
-                    .filter { it.name.contains(searchQuery, ignoreCase = true) }
+                    .filter { client ->
+                        client.company == loginModel.loginState.company &&
+                                client.name.contains(searchQuery, ignoreCase = true)
+                    }
                     .sortedBy { it.name.lowercase() }
                     .toList()
             }
