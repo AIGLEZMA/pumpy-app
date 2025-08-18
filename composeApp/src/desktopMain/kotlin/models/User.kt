@@ -7,7 +7,8 @@ data class User(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val username: String,
     val password: String,
-    val isAdmin: Boolean = false
+    val isAdmin: Boolean = false,
+    val company: Company
 )
 
 @Dao
@@ -26,6 +27,9 @@ interface UserDao {
 
     @Query("SELECT * FROM user WHERE id= :id")
     suspend fun getUserById(id: Long): User?
+
+    @Query("SELECT * FROM user WHERE company = :company")
+    suspend fun getUsersByCompany(company: Company): List<User>
 
     @Query("SELECT * FROM user")
     suspend fun getAllUsers(): List<User>

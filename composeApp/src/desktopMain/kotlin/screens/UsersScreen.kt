@@ -57,21 +57,16 @@ class UsersScreen : Screen {
         val loginState = loginScreenModel.loginState
         val isLoading = usersScreenModel.isLoading
 
-        // Derive filtered + sorted list from source state
-        val sortedUsers by remember(
-            usersScreenModel.users,
-            searchQuery,
-            loginState.user
-        ) {
+        // Derive filtered (and sorted) users efficiently
+        val sortedUsers by remember(usersScreenModel.users, searchQuery, loginState.company, loginState.user) {
             derivedStateOf {
                 usersScreenModel.users
                     .asSequence()
-                    .filter { it.username.contains(searchQuery, ignoreCase = true) }
-                    // Pin the logged-in user on top, then alpha by username
-                    .sortedWith(
-                        compareBy<User> { it.id != loginState.user?.id }
-                            .thenBy { it.username.lowercase() }
-                    )
+                    .filter { user ->
+                        user.company == loginState.company &&
+                                user.username.contains(searchQuery, ignoreCase = true)
+                    }
+                    .sortedBy { it.username.lowercase() }
                     .toList()
             }
         }

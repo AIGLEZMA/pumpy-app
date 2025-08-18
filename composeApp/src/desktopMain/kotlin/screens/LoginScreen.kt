@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalFocusManager
@@ -27,7 +26,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import models.Company
+import models.User
 import screenmodels.LoginScreenModel
+import ui.AutoCompleteTextField
 
 class LoginScreen : Screen {
 
@@ -36,17 +37,26 @@ class LoginScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = navigator.rememberNavigatorScreenModel { LoginScreenModel() }
 
-        var username by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var passwordVisible by remember { mutableStateOf(false) }
-        var selectedCompany by remember { mutableStateOf(Company.MAGRINOV) }
+        var selectedCompany by remember { mutableStateOf<Company?>(null) }
+        var selectedUser by remember { mutableStateOf<User?>(null) }
+        var userList by remember { mutableStateOf<List<User>>(emptyList()) }
 
         val loginState = screenModel.loginState
         val focusManager = LocalFocusManager.current
 
         fun submit() {
-            if (!loginState.isLoading) {
-                screenModel.login(username.trim(), password, selectedCompany)
+            if (!loginState.isLoading && selectedUser != null) {
+                screenModel.loginWithUser(selectedUser!!, password)
+            }
+        }
+
+        // Fetch users when company changes
+        LaunchedEffect(selectedCompany) {
+            selectedUser = null
+            if (selectedCompany != null) {
+                userList = screenModel.getUsersForCompany(selectedCompany!!)
             }
         }
 
@@ -70,21 +80,36 @@ class LoginScreen : Screen {
 
                     Spacer(Modifier.height(16.dp))
 
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text("Nom d'utilisateur") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
                             .fillMaxWidth(0.21f)
-                            .onPreviewKeyEvent { e ->
-                                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
-                                    focusManager.moveFocus(FocusDirection.Next)
-                                    true
-                                } else false
-                            }
+                            .semantics { role = Role.Tab }
+                            .selectableGroup()
+                    ) {
+                        val options = listOf(Company.MAGRINOV, Company.LOTRAX)
+                        options.forEachIndexed { index, company ->
+                            SegmentedButton(
+                                selected = selectedCompany == company,
+                                onClick = { selectedCompany = company },
+                                shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                                label = { Text(company.pretty) }
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    AutoCompleteTextField(
+                        label = "Nom d'utilisateur",
+                        items = userList,
+                        selectedItem = selectedUser,
+                        onSelectedItemChange = { selectedUser = it },
+                        displayText = { it.username },
+                        enabled = selectedCompany != null,
+                        modifier = Modifier.fillMaxWidth(0.21f)
                     )
+
+                    Spacer(Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = password,
@@ -92,6 +117,7 @@ class LoginScreen : Screen {
                             password = it.filterNot { ch -> ch == '\n' || ch == '\t' }
                         },
                         singleLine = true,
+                        enabled = selectedCompany != null,
                         label = { Text("Mot de passe") },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
@@ -115,23 +141,6 @@ class LoginScreen : Screen {
                             }
                     )
 
-                    SingleChoiceSegmentedButtonRow(
-                        modifier = Modifier
-                            .fillMaxWidth(0.21f)
-                            .semantics { role = Role.Tab }
-                            .selectableGroup()
-                    ) {
-                        val options = listOf(Company.MAGRINOV, Company.LOTRAX)
-                        options.forEachIndexed { index, company ->
-                            SegmentedButton(
-                                selected = selectedCompany == company,
-                                onClick = { selectedCompany = company },
-                                shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                                label = { Text(company.pretty) }
-                            )
-                        }
-                    }
-
                     Spacer(Modifier.height(12.dp))
 
                     Button(
@@ -139,7 +148,7 @@ class LoginScreen : Screen {
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp),
                         shape = MaterialTheme.shapes.small,
-                        enabled = !loginState.isLoading,
+                        enabled = !loginState.isLoading && selectedUser != null,
                         modifier = Modifier
                             .fillMaxWidth(0.21f)
                             .height(54.dp)

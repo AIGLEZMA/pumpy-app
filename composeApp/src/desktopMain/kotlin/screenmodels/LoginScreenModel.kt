@@ -18,30 +18,27 @@ class LoginScreenModel : ScreenModel {
     var loginState by mutableStateOf(LoginState())
         private set
 
-    fun login(username: String, password: String, company: Company) {
-        Logger.debug("[Login] Logging in as $username")
+    suspend fun getUsersForCompany(company: Company): List<User> {
+        val userDao = DatabaseProvider.getDatabase().userDao()
+        return userDao.getUsersByCompany(company)
+    }
+
+    fun loginWithUser(user: User, password: String) {
+        Logger.debug("[Login] Logging in as ${user.username}")
         screenModelScope.launch {
             loginState = loginState.copy(isLoading = true)
 
-            val userDao = DatabaseProvider.getDatabase().userDao()
-            val user = userDao.getUserByUsername(username)
+            val isPasswordCorrect = withContext(Dispatchers.Default) {
+                Password.verify(password, user.password)
+            }
 
-            if (user != null) {
-                // Perform the CPU-intensive password verification on the Default dispatcher
-                val isPasswordCorrect = withContext(Dispatchers.Default) {
-                    Password.verify(password, user.password)
-                }
-
-                loginState = if (isPasswordCorrect) {
-                    LoginState(user = user, isAuthenticated = true, company = company)
-                } else {
-                    LoginState(errorMessage = "Mot de passe incorrecte")
-                }
+            loginState = if (isPasswordCorrect) {
+                LoginState(user = user, isAuthenticated = true, company = user.company)
             } else {
-                loginState = LoginState(errorMessage = "Utilisateur non trouvé")
+                LoginState(errorMessage = "Mot de passe incorrecte")
             }
         }.invokeOnCompletion {
-            Logger.debug("[Login] Logging in as $username : ${if (loginState.isAuthenticated) "SUCCESS" else "FAILURE (${loginState.errorMessage})"} ")
+            Logger.debug("[Login] Logging in as ${user.username} : ${if (loginState.isAuthenticated) "SUCCESS" else "FAILURE (${loginState.errorMessage})"}")
         }
     }
 

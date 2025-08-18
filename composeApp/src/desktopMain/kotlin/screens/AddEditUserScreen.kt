@@ -42,7 +42,7 @@ class AddEditUserScreen(private val user: User? = null) : Screen {
         val focusManager = LocalFocusManager.current
 
         fun submit() {
-            screenModel.saveUser(username.trim(), password)
+            screenModel.saveUser(username.trim(), password, userState.company)
         }
 
         // Close screen after successful save
