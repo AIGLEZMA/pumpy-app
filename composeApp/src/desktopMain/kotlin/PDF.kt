@@ -116,7 +116,6 @@ class HeaderFooterPageEvent : PdfPageEventHelper() {
     }
 }
 
-
 private fun addTitleAndHeaderInfo(document: Document, report: Report, creatorName: String, company: Company) {
     val headerTable = PdfPTable(3).apply {
         widthPercentage = 100f
@@ -263,7 +262,10 @@ private fun addTechnicalSection(document: Document, report: Report) {
     table.addCell(createLabeledCell("Profondeur", "${report.depth} m"))
     table.addCell(createLabeledCell("Niveau statique", "${report.staticLevel} m"))
     table.addCell(createLabeledCell("Niveau dynamique", "${report.dynamicLevel} m"))
-    table.addCell(createLabeledCell("Calage de la pompe", "${report.pumpShimming} m"))
+    val pumpShimmingCell = PdfPCell(createLabeledCell("Calage de la pompe", "${report.pumpShimming} m")).apply {
+        colspan = 2
+    }
+    table.addCell(pumpShimmingCell)
 
     if (report.engine != null) {
         table.addCell(createLabeledCell("Moteur", report.engine))
@@ -335,7 +337,9 @@ private fun addNotesSection(document: Document, report: Report) {
     }
 
     try {
-        val img = getAnnotatedSchema()
+        val img = getAnnotatedSchema(
+            report.staticLevel, report.dynamicLevel, report.pumpShimming, report.depth
+        )
         img.alignment = Element.ALIGN_CENTER
 
         val tableInnerWidth = document.right() - document.left()
@@ -361,7 +365,7 @@ private fun addNotesSection(document: Document, report: Report) {
     document.add(table)
 }
 
-fun getAnnotatedSchema(): Image {
+fun getAnnotatedSchema(staticLevel: Long?, dynamicLevel: Long?, pumpShimming: Long?, depth: Long?): Image {
     val originalStream: InputStream = Thread.currentThread().contextClassLoader
         .getResourceAsStream("schema.png")
         ?: throw IllegalArgumentException("Image 'schema.png' not found in resources")
@@ -377,26 +381,10 @@ fun getAnnotatedSchema(): Image {
 
     g2d.color = Color.BLACK
     g2d.font = java.awt.Font("Arial", Font.NORMAL, 36)
-    g2d.drawString("10", 480, 400) // X=475
-    g2d.drawString("20", 580, 675) // X=575; Y=650
-    g2d.drawString("30", 680, 1190) // X=; Y=1150
-    g2d.drawString("40", 775, 1310)
-
-    if (false) {
-        for (y in 0 until annotatedImage.height step 25) {
-            g2d.color = Color.LIGHT_GRAY
-            g2d.font = java.awt.Font("Arial", Font.NORMAL, 8)
-            g2d.drawLine(0, y, annotatedImage.width, y)
-            g2d.drawString("Y=$y", 5, y - 5)
-        }
-
-        for (x in 0 until annotatedImage.width step 25) {
-            g2d.color = Color.LIGHT_GRAY
-            g2d.font = java.awt.Font("Arial", Font.NORMAL, 8)
-            g2d.drawLine(x, 0, x, annotatedImage.height)
-            g2d.drawString("X=$x", x + 2, 10)
-        }
-    }
+    g2d.drawString(staticLevel.toString(), 480, 400) // X=475
+    g2d.drawString(dynamicLevel.toString(), 580, 675) // X=575; Y=650
+    g2d.drawString(pumpShimming.toString(), 680, 1190) // X=; Y=1150
+    g2d.drawString(depth.toString(), 765, 1310)
 
     g2d.dispose()
 

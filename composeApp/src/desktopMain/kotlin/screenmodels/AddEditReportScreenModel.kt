@@ -16,8 +16,8 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
         private set
 
     var selectedClient by mutableStateOf<Client?>(null)
-    var selectedFarmName by mutableStateOf<String?>("")
-    var selectedPumpName by mutableStateOf<String?>("")
+    var selectedFarmName by mutableStateOf(report?.farm)
+    var selectedPumpName by mutableStateOf(report?.wellDrilling)
 
     var executionOrder by mutableStateOf(report?.executionOrder)
     var requestDate by mutableStateOf(report?.requestDate)
