@@ -33,6 +33,8 @@ fun App() {
             val hashedPassword = Password.hash(adminPassword)
             database.userDao()
                 .insert(User(username = "admin", password = hashedPassword, isAdmin = true, company = Company.MAGRINOV))
+            database.userDao()
+                .insert(User(username = "admin", password = hashedPassword, isAdmin = true, company = Company.LOTRAX))
             Logger.debug("[Database] Admin user created during app startup.")
         }
 
