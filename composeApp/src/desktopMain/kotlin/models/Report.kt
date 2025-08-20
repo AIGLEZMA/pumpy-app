@@ -49,7 +49,8 @@ data class Report(
 ) {
     enum class OperationType(val beautiful: String) {
         ASSEMBLY("Montage"),
-        DISASSEMBLY("Démontage")
+        DISASSEMBLY("Démontage"),
+        BOTH("Montage et démontage");
     }
 }
 

@@ -7,8 +7,6 @@ import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.Navigator
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
-import models.Company
-import models.User
 import screens.LoginScreen
 import screens.SplashScreen
 import java.nio.file.Paths
@@ -26,17 +24,7 @@ fun App() {
         val startTime = System.currentTimeMillis()
         val database = DatabaseProvider.getDatabase()
 
-        // Check if the admin user exists and create it if not
-        val existingUser = database.userDao().getUserByUsername("admin")
-        if (existingUser == null) {
-            val adminPassword = System.getenv("ADMIN_PASSWORD") ?: "admin"
-            val hashedPassword = Password.hash(adminPassword)
-            database.userDao()
-                .insert(User(username = "Admin Magrinov", password = hashedPassword, isAdmin = true, company = Company.MAGRINOV))
-            database.userDao()
-                .insert(User(username = "Admin Lotrax", password = hashedPassword, isAdmin = true, company = Company.LOTRAX))
-            Logger.debug("[Database] Admin user created during app startup.")
-        }
+        DatabaseProvider.ensureAdminAccounts(database)
 
         isDatabaseInitialized.value = true
 

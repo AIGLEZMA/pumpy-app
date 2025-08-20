@@ -205,6 +205,7 @@ fun OperationTypeBreadcrumb(
 ) {
     val assembly = Report.OperationType.ASSEMBLY
     val disassembly = Report.OperationType.DISASSEMBLY
+    val both = Report.OperationType.BOTH
 
     Column(modifier = modifier) {
         Text(
@@ -218,14 +219,20 @@ fun OperationTypeBreadcrumb(
             SegmentedButton(
                 selected = selectedType == assembly,
                 onClick = { onTypeSelected(assembly) },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                label = { Text("Montage") }
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                label = { Text(assembly.beautiful) }
             )
             SegmentedButton(
                 selected = selectedType == disassembly,
                 onClick = { onTypeSelected(disassembly) },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                label = { Text("Démontage") }
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                label = { Text(assembly.beautiful) }
+            )
+            SegmentedButton(
+                selected = selectedType == both,
+                onClick = { onTypeSelected(both) },
+                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                label = { Text("Les deux") }
             )
         }
     }

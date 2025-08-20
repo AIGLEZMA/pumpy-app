@@ -36,4 +36,31 @@ object DatabaseProvider {
         }
     }
 
+    suspend fun ensureAdminAccounts(database: AppDatabase) {
+        val dao = database.userDao()
+
+        Company.entries
+            .filter { it != Company.UNKNOWN } // Ignore UNKNOWN
+            .forEach { company ->
+                val existing = dao.getAdminByCompany(company)
+                if (existing == null) {
+                    val plainPassword = "admin" // TODO: env ?
+                    val hashedPassword = Password.hash(plainPassword)
+                    val defaultUsername = "admin@${company.name.lowercase()}"
+
+                    dao.upsertUser(
+                        User(
+                            username = defaultUsername,
+                            password = hashedPassword,
+                            isAdmin = true,
+                            company = company
+                        )
+                    )
+
+                    Logger.debug("[Database] Created admin for ${company.pretty} with username: '$defaultUsername'")
+                    Logger.debug("[Security] Default password (change it after first login): $plainPassword")
+                }
+            }
+    }
+
 }

@@ -124,7 +124,7 @@ fun TechnicalForm(
         label = { Text("Débit (m3/h)") },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Decimal,
-            imeAction = if (type == Report.OperationType.ASSEMBLY) ImeAction.Next else ImeAction.Next
+            imeAction = ImeAction.Next
         ),
         singleLine = true,
         isError = isSpeedError,
@@ -146,50 +146,48 @@ fun TechnicalForm(
 
     Spacer(modifier = spaceBetweenFields)
 
-    if (type == Report.OperationType.ASSEMBLY) {
-        OutlinedTextField(
-            value = engine ?: "",
-            onValueChange = onEngineChange,
-            label = { Text("Moteur") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            supportingText = { Text("") },
-            modifier = modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { e ->
-                    if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
-                        focus.moveFocus(FocusDirection.Next); true
-                    } else false
-                }
-        )
-        Spacer(modifier = spaceBetweenFields)
+    OutlinedTextField(
+        value = engine ?: "",
+        onValueChange = onEngineChange,
+        label = { Text("Moteur") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        supportingText = { Text("") },
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+    Spacer(modifier = spaceBetweenFields)
 
-        OutlinedTextField(
-            value = pump ?: "",
-            onValueChange = onPumpChange,
-            label = { Text("Pompe") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            supportingText = { Text("") },
-            modifier = modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { e ->
-                    if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
-                        focus.moveFocus(FocusDirection.Next); true
-                    } else false
-                }
-        )
-        Spacer(modifier = spaceBetweenFields)
+    OutlinedTextField(
+        value = pump ?: "",
+        onValueChange = onPumpChange,
+        label = { Text("Pompe") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        supportingText = { Text("") },
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+    Spacer(modifier = spaceBetweenFields)
 
-        ElementsForm(
-            elements = elements,
-            onElementAdd = onElementAdd,
-            onElementChange = onElementChange,
-            onElementRemove = onElementRemove,
-            modifier = modifier.fillMaxWidth()
-        )
-        Spacer(modifier = spaceBetweenFields)
-    }
+    ElementsForm(
+        elements = elements,
+        onElementAdd = onElementAdd,
+        onElementChange = onElementChange,
+        onElementRemove = onElementRemove,
+        modifier = modifier.fillMaxWidth()
+    )
+    Spacer(modifier = spaceBetweenFields)
 
     NotesTextBox(
         notes = notes,
