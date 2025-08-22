@@ -160,9 +160,9 @@ fun OperatorForm(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Opérateurs", style = MaterialTheme.typography.titleLarge)
+            Text(text = "Intervenants", style = MaterialTheme.typography.titleLarge)
             IconButton(onClick = onOperatorAdd) {
-                Icon(Icons.Default.Add, contentDescription = "Ajouter un opérateur")
+                Icon(Icons.Default.Add, contentDescription = "Ajouter un intervenant")
             }
         }
 

@@ -216,7 +216,7 @@ private fun addGeneralInfoSection(
     val operatorsCell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
         setPadding(4f)
-        addElement(Phrase("Opérateurs : ", robotoRegular.apply { color = Color.DARK_GRAY }))
+        addElement(Phrase("Intervenants : ", robotoRegular.apply { color = Color.DARK_GRAY }))
         addElement(operatorsList)
     }
     table.addCell(operatorsCell)
