@@ -6,7 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -137,7 +137,7 @@ fun GeneralForm(
 
     Spacer(modifier = spaceBetweenFields)
 
-    OperationTypeBreadcrumb(
+    OperationPicker(
         selectedType = selectedType,
         onTypeSelected = onTypeSelected,
         modifier = modifier.fillMaxWidth()
@@ -176,7 +176,7 @@ fun OperatorForm(
                 OutlinedTextField(
                     value = operator,
                     onValueChange = { onOperatorChange(index, it) },
-                    label = { Text("Opérateur #${index + 1}") },
+                    label = { Text("Intervenant #${index + 1}") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     modifier = Modifier
@@ -188,7 +188,7 @@ fun OperatorForm(
                         }
                 )
                 IconButton(onClick = { onOperatorRemove(index) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Supprimer l'opérateur")
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer l'intervenant")
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -198,42 +198,40 @@ fun OperatorForm(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OperationTypeBreadcrumb(
+fun OperationPicker(
     selectedType: Report.OperationType?,
     onTypeSelected: (Report.OperationType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val assembly = Report.OperationType.ASSEMBLY
-    val disassembly = Report.OperationType.DISASSEMBLY
-    val both = Report.OperationType.BOTH
+    var expanded by remember { mutableStateOf(false) }
+    val label: (Report.OperationType) -> String = {
+        if (it == Report.OperationType.BOTH) "Montage + Démontage" else it.beautiful
+    }
 
-    Column(modifier = modifier) {
-        Text(
-            text = "Type d'opération",
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(bottom = 6.dp)
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            readOnly = true,
+            value = selectedType?.let(label) ?: "",
+            onValueChange = {},
+            label = { Text("Opération") },
+            placeholder = { Text("Choisir...") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = modifier.menuAnchor()
         )
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
         ) {
-            SegmentedButton(
-                selected = selectedType == assembly,
-                onClick = { onTypeSelected(assembly) },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
-                label = { Text(assembly.beautiful) }
-            )
-            SegmentedButton(
-                selected = selectedType == disassembly,
-                onClick = { onTypeSelected(disassembly) },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
-                label = { Text(disassembly.beautiful) }
-            )
-            SegmentedButton(
-                selected = selectedType == both,
-                onClick = { onTypeSelected(both) },
-                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
-                label = { Text("Les deux") }
-            )
+            Report.OperationType.entries.forEach { opt ->
+                DropdownMenuItem(
+                    text = { Text(label(opt), maxLines = 1) },
+                    onClick = { onTypeSelected(opt); expanded = false }
+                )
+            }
         }
     }
 }
