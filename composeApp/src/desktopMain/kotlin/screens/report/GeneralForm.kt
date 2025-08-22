@@ -35,10 +35,10 @@ fun GeneralForm(
     clients: List<Client>,
     selectedClient: Client?,
     onSelectedClientChange: (Client?) -> Unit,
-    selectedFarmName: String?,
-    onSelectedFarmNameChange: (String?) -> Unit,
-    selectedPumpName: String?,
-    onSelectedPumpNameChange: (String?) -> Unit,
+    asker: String?,
+    onAskerChange: (String?) -> Unit,
+    wellDrilling: String?,
+    onWellDrillingChange: (String?) -> Unit,
     operators: List<String>,
     onOperatorAdd: () -> Unit,
     onOperatorRemove: (Int) -> Unit,
@@ -94,9 +94,9 @@ fun GeneralForm(
     Spacer(modifier = spaceBetweenFields)
 
     OutlinedTextField(
-        value = selectedFarmName ?: "",
-        onValueChange = onSelectedFarmNameChange,
-        label = { Text("Installation") },
+        value = asker ?: "",
+        onValueChange = onAskerChange,
+        label = { Text("Demandeur") },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         modifier = modifier
@@ -111,8 +111,8 @@ fun GeneralForm(
     Spacer(modifier = spaceBetweenFields)
 
     OutlinedTextField(
-        value = selectedPumpName ?: "",
-        onValueChange = onSelectedPumpNameChange,
+        value = wellDrilling ?: "",
+        onValueChange = onWellDrillingChange,
         label = { Text("Forage") },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -226,7 +226,7 @@ fun OperationTypeBreadcrumb(
                 selected = selectedType == disassembly,
                 onClick = { onTypeSelected(disassembly) },
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
-                label = { Text(assembly.beautiful) }
+                label = { Text(disassembly.beautiful) }
             )
             SegmentedButton(
                 selected = selectedType == both,

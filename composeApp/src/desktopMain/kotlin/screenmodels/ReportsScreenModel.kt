@@ -116,8 +116,8 @@ class ReportsScreenModel : ScreenModel {
         report: Report,
         clientUsername: String,
         creatorName: String,
-        farmName: String,
-        pumpName: String,
+        asker: String,
+        wellDrilling: String,
         company: Company
     ) {
         Logger.debug("[Report] Printing report (id: ${report.reportId})...")
@@ -134,8 +134,8 @@ class ReportsScreenModel : ScreenModel {
                         report = report,
                         clientUsername = clientUsername,
                         creatorName = creatorName,
-                        farmName = farmName,
-                        pumpName = pumpName,
+                        asker = asker,
+                        wellDrilling = wellDrilling,
                         company = company,
                         outputPath = tmp.toString()
                     )
@@ -155,8 +155,8 @@ class ReportsScreenModel : ScreenModel {
         report: Report,
         clientUsername: String,
         creatorName: String,
-        farmName: String,
-        pumpName: String,
+        asker: String,
+        wellDrilling: String,
         company: Company
     ) {
         Logger.debug("[Report] Saving pdf of a report (id: ${report.reportId}) ...")
@@ -182,8 +182,8 @@ class ReportsScreenModel : ScreenModel {
                                 report = report,
                                 clientUsername = clientUsername,
                                 creatorName = creatorName,
-                                farmName = farmName,
-                                pumpName = pumpName,
+                                asker = asker,
+                                wellDrilling = wellDrilling,
                                 company = company,
                                 outputPath = outputPath.toString()
                             )

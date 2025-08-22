@@ -19,8 +19,8 @@ fun generateReport(
     report: Report,
     clientUsername: String,
     creatorName: String,
-    farmName: String,
-    pumpName: String,
+    asker: String,
+    wellDrilling: String,
     company: Company,
     outputPath: String
 ) {
@@ -35,7 +35,7 @@ fun generateReport(
 
     addTitleAndHeaderInfo(document, report = report, creatorName = creatorName, company = company)
     addGeneralInfoSection(
-        document, report, clientName = clientUsername, farmName = farmName, pumpName = pumpName
+        document, report, clientName = clientUsername, asker = asker, wellDrilling = wellDrilling
     )
     addFinancialSection(document, report)
     addTechnicalSection(document, report)
@@ -192,7 +192,7 @@ private fun addTitleAndHeaderInfo(document: Document, report: Report, creatorNam
 }
 
 private fun addGeneralInfoSection(
-    document: Document, report: Report, clientName: String, farmName: String, pumpName: String
+    document: Document, report: Report, clientName: String, asker: String, wellDrilling: String
 ) {
     document.add(Paragraph("Informations Générales", robotoBold.apply {
         size = 12f
@@ -205,8 +205,8 @@ private fun addGeneralInfoSection(
     }
     table.addCell(createLabeledCell("Client", clientName))
     table.addCell(createLabeledCell("Bon d'exécution", report.executionOrder.toString()))
-    table.addCell(createLabeledCell("Installation", farmName))
-    table.addCell(createLabeledCell("Forage", pumpName))
+    table.addCell(createLabeledCell("Demandeur", asker))
+    table.addCell(createLabeledCell("Forage", wellDrilling))
     table.addCell(createLabeledCell("Type d'opération", report.type.beautiful))
 
     val operatorsList = List(false, 5f)

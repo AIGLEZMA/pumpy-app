@@ -197,8 +197,8 @@ class ReportsScreen : Screen {
                                         report = report,
                                         clientUsername = client,
                                         creatorName = creator,
-                                        farmName = report.farm,
-                                        pumpName = report.wellDrilling,
+                                        asker = report.asker,
+                                        wellDrilling = report.wellDrilling,
                                         company = currentCompany
                                     )
                                 },
@@ -331,7 +331,7 @@ class ReportsScreen : Screen {
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
                     Text(
-                        report.farm,
+                        report.asker,
                         modifier = Modifier.weight(2f),
                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                     )
@@ -355,7 +355,7 @@ class ReportsScreen : Screen {
                                     report,
                                     client?.name ?: "",
                                     creator?.username ?: "",
-                                    report.farm,
+                                    report.asker,
                                     report.wellDrilling,
                                     currentCompany
                                 )
@@ -490,10 +490,10 @@ class ReportsScreen : Screen {
                                     }
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text(
-                                            "Installation:",
+                                            "Demandeur:",
                                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                                         )
-                                        Text(report.farm)
+                                        Text(report.asker)
                                     }
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text(

@@ -16,9 +16,9 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
         private set
 
     var selectedClient by mutableStateOf<Client?>(null)
-    var selectedFarmName by mutableStateOf(report?.farm)
-    var selectedPumpName by mutableStateOf(report?.wellDrilling)
 
+    var asker by mutableStateOf(report?.asker)
+    var wellDrilling by mutableStateOf(report?.wellDrilling)
     var executionOrder by mutableStateOf(report?.executionOrder)
     var requestDate by mutableStateOf(report?.requestDate)
     var workStartDate by mutableStateOf(report?.workStartDate)
@@ -89,8 +89,8 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
 
         type == null -> "Le type doit être sélectionné."
         selectedClient == null -> "Le client doit être sélectionné."
-        selectedFarmName.isNullOrBlank() -> "Le nom de l'installation doit être rempli."
-        selectedPumpName.isNullOrBlank() -> "Le nom du forage (pompe) doit être rempli."
+        asker.isNullOrBlank() -> "Le nom du demandeur doit être rempli."
+        wellDrilling.isNullOrBlank() -> "Le nom du forage doit être rempli."
         purchaseRequest.isNullOrBlank() -> "Le numéro de demande d'achat doit être rempli."
         quotation.isNullOrBlank() -> "Le numéro de devis doit être rempli."
         purchaseOrder.isNullOrBlank() -> "Le numéro de bon de commande doit être rempli."
@@ -118,8 +118,8 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 operators = operators,
                 type = type!!,
                 company = company,
-                wellDrilling = selectedPumpName!!, // "forage/pompe"
-                farm = selectedFarmName!!,
+                wellDrilling = wellDrilling!!, // "forage/pompe"
+                asker = asker!!,
                 staticLevel = staticLevel,
                 dynamicLevel = dynamicLevel,
                 pumpShimming = pumpShimming,

@@ -130,10 +130,7 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                                         executionOrder = screenModel.executionOrder,
                                         onExecutionOrderChange = { screenModel.executionOrder = it },
                                         requestDate = screenModel.requestDate,
-                                        onRequestDateChange = {
-                                            Logger.debug("[Report] @ Date Old: ${screenModel.requestDate} | New: $it")
-                                            screenModel.requestDate = it
-                                        },
+                                        onRequestDateChange = { screenModel.requestDate = it },
                                         workStartDate = screenModel.workStartDate,
                                         onWorkStartDateChange = { screenModel.workStartDate = it },
                                         workFinishDate = screenModel.workFinishDate,
@@ -141,10 +138,10 @@ class AddEditReportScreen(private val report: Report? = null) : Screen {
                                         clients = clients,
                                         selectedClient = screenModel.selectedClient,
                                         onSelectedClientChange = { screenModel.selectedClient = it },
-                                        selectedFarmName = screenModel.selectedFarmName,
-                                        onSelectedFarmNameChange = { screenModel.selectedFarmName = it },
-                                        selectedPumpName = screenModel.selectedPumpName,
-                                        onSelectedPumpNameChange = { screenModel.selectedPumpName = it },
+                                        asker = screenModel.asker,
+                                        onAskerChange = { screenModel.asker = it },
+                                        wellDrilling = screenModel.wellDrilling,
+                                        onWellDrillingChange = { screenModel.wellDrilling = it },
                                         operators = screenModel.operators,
                                         onOperatorAdd = { screenModel.addOperator() },
                                         onOperatorRemove = { screenModel.removeOperator(it) },

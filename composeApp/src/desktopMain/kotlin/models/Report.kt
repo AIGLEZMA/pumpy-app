@@ -31,7 +31,7 @@ data class Report(
     val type: OperationType,
     val company: Company,
     val wellDrilling: String,
-    val farm: String,
+    val asker: String,
     val depth: Long?,
     val staticLevel: Long?,
     val dynamicLevel: Long?,
@@ -50,7 +50,8 @@ data class Report(
     enum class OperationType(val beautiful: String) {
         ASSEMBLY("Montage"),
         DISASSEMBLY("Démontage"),
-        BOTH("Montage et démontage");
+
+        BOTH("Démontage et montage");
     }
 }
 
