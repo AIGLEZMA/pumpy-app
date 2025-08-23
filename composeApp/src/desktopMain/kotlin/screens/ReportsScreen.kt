@@ -680,7 +680,7 @@ class ReportsScreen : Screen {
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
             )
             Text(
-                "Installation",
+                "Demandeur",
                 modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
             )
@@ -690,7 +690,7 @@ class ReportsScreen : Screen {
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
             )
             Text(
-                "Demandeur",
+                "Créateur",
                 modifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp)
             )

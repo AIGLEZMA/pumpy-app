@@ -30,9 +30,15 @@ fun TechnicalForm(
     onDynamicLevelChange: (Long?) -> Unit,
     pumpShimming: Long?,
     onPumpShimmingChange: (Long?) -> Unit,
+    secondPumpShimming: Long?,
+    onSecondPumpShimmingChange: (Long?) -> Unit,
     speed: Float?,
     onSpeedChange: (Float?) -> Unit,
+    current: Float?,
+    onCurrentChange: (Float?) -> Unit,
     type: Report.OperationType,
+    depthAfterCleaning: Long?,
+    onDepthAfterCleaningChange: (Long?) -> Unit,
     engine: String?,
     onEngineChange: (String) -> Unit,
     pump: String?,
@@ -60,6 +66,23 @@ fun TechnicalForm(
             }
     )
     Spacer(modifier = spaceBetweenFields)
+
+    if (type == Report.OperationType.CLEANING) {
+        NumberTextField(
+            value = depthAfterCleaning,
+            label = "Profondeur après nettoyage (m)",
+            onValueChange = onDepthAfterCleaningChange,
+            modifier = modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { e ->
+                    if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                        focus.moveFocus(FocusDirection.Next); true
+                    } else false
+                }
+        )
+
+        Spacer(modifier = spaceBetweenFields)
+    }
 
     NumberTextField(
         value = staticLevel,
@@ -103,6 +126,21 @@ fun TechnicalForm(
     )
     Spacer(modifier = spaceBetweenFields)
 
+    NumberTextField(
+        value = secondPumpShimming,
+        label = "2ᵉ Calage de la pompe (m)",
+        onValueChange = onSecondPumpShimmingChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+
+    Spacer(modifier = spaceBetweenFields)
+
     // Débit (float) with comma/dot handling and validation
     var speedText by remember(speed) { mutableStateOf(speed?.toString() ?: "") }
     var isSpeedError by remember { mutableStateOf(false) }
@@ -130,6 +168,49 @@ fun TechnicalForm(
         isError = isSpeedError,
         supportingText = {
             if (isSpeedError) {
+                Text("Veuillez entrer un nombre décimal valide.", color = MaterialTheme.colorScheme.error)
+            } else {
+                Text("") // keep space
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .onPreviewKeyEvent { e ->
+                if (e.key == Key.Enter && e.type == KeyEventType.KeyUp) {
+                    focus.moveFocus(FocusDirection.Next); true
+                } else false
+            }
+    )
+
+    Spacer(modifier = spaceBetweenFields)
+
+    // Current (float) with comma/dot handling and validation
+    var currentText by remember(current) { mutableStateOf(current?.toString() ?: "") }
+    var isCurrentError by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = currentText,
+        onValueChange = { newValue ->
+            // allow digits, one comma or dot, and empty
+            val cleaned = newValue
+                .replace(',', '.')
+                .filterIndexed { idx, c ->
+                    c.isDigit() || c == '.' || (c == '-' && idx == 0)
+                }
+            currentText = cleaned
+            val parsed = cleaned.toFloatOrNull()
+            isCurrentError = cleaned.isNotEmpty() && parsed == null
+            onCurrentChange(parsed)
+        },
+        label = { Text("Courrant (A)") },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal,
+            imeAction = ImeAction.Next
+        ),
+        singleLine = true,
+        isError = isCurrentError,
+        supportingText = {
+            if (isCurrentError) {
                 Text("Veuillez entrer un nombre décimal valide.", color = MaterialTheme.colorScheme.error)
             } else {
                 Text("") // keep space

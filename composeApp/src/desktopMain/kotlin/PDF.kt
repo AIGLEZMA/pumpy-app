@@ -26,7 +26,7 @@ fun generateReport(
 ) {
     FontFactory.registerDirectories()
 
-    val document = Document(PageSize.A4)
+    val document = Document(PageSize.A4, 36f, 36f, 20f, 20f)
     val writer = PdfWriter.getInstance(document, FileOutputStream(outputPath))
 
     writer.pageEvent = HeaderFooterPageEvent()
@@ -248,10 +248,15 @@ private fun addFinancialSection(document: Document, report: Report) {
 }
 
 private fun addTechnicalSection(document: Document, report: Report) {
-    document.add(Paragraph("Détails Techniques", robotoBold.apply {
-        size = 12f
-        color = accentColor
-    }).apply { setSpacingBefore(10f); setSpacingAfter(5f) })
+    document.add(
+        Paragraph("Détails Techniques", robotoBold.apply {
+            size = 12f
+            color = accentColor
+        }).apply {
+            setSpacingBefore(10f)
+            setSpacingAfter(5f)
+        }
+    )
 
     val table = PdfPTable(2).apply {
         widthPercentage = 100f
@@ -259,13 +264,17 @@ private fun addTechnicalSection(document: Document, report: Report) {
     }
 
     table.addCell(createLabeledCell("Débit", "${report.speed} m³/h"))
+    table.addCell(createLabeledCell("Courant", "${report.current} A"))
     table.addCell(createLabeledCell("Profondeur", "${report.depth} m"))
+    if (report.type == Report.OperationType.CLEANING && report.depthAfterCleaning != null) {
+        table.addCell(createLabeledCell("Profondeur après nettoyage", "${report.depthAfterCleaning} m"))
+    }
     table.addCell(createLabeledCell("Niveau statique", "${report.staticLevel} m"))
     table.addCell(createLabeledCell("Niveau dynamique", "${report.dynamicLevel} m"))
-    val pumpShimmingCell = PdfPCell(createLabeledCell("Calage de la pompe", "${report.pumpShimming} m")).apply {
-        colspan = 2
+    table.addCell(createLabeledCell("Calage de la pompe", "${report.pumpShimming} m"))
+    if (report.secondPumpShimming != null) {
+        table.addCell(createLabeledCell("2ᵉ Calage de la pompe", "${report.secondPumpShimming} m"))
     }
-    table.addCell(pumpShimmingCell)
 
     if (report.engine != null) {
         table.addCell(createLabeledCell("Moteur", report.engine))
@@ -282,58 +291,66 @@ private fun addTechnicalSection(document: Document, report: Report) {
 
     document.add(table)
 
-    document.add(Paragraph("Éléments utilisés", robotoRegular.apply {
-        color = accentColor
-    }).apply {
-        setSpacingBefore(10f)
-    })
-    val elementsList = List(false, 5f)
+    document.add(
+        Paragraph("Élements utilisés", robotoRegular.apply {
+            color = accentColor
+        }).apply {
+            setSpacingBefore(10f)
+        }
+    )
 
+    val elementsList = List(false, 5f)
     report.elements.forEach { element ->
         if (element.isNotBlank()) {
             elementsList.add(ListItem(element, robotoLight))
         }
     }
-
     document.add(elementsList)
 }
 
 private fun addNotesSection(document: Document, report: Report) {
-    // Section title
     document.add(
         Paragraph("Notes et Observations", robotoBold.apply {
             size = 12f
             color = accentColor
-        }).apply { setSpacingBefore(10f); setSpacingAfter(5f) }
+        }).apply { setSpacingBefore(8f); setSpacingAfter(4f) }
     )
 
-    // 2/3 notes, 1/3 image
     val table = PdfPTable(2).apply {
         widthPercentage = 100f
-        setSpacingBefore(5f)
+        setSpacingBefore(4f)
         setWidths(floatArrayOf(2f, 1f)) // 2/3 : 1/3
         defaultCell.border = Rectangle.NO_BORDER
+        keepTogether = true // <---
     }
 
-    // LEFT (2/3): Notes text
-    val notesParagraph = Paragraph(report.notes, robotoLight.apply {
+    // LEFT (2/3): Notes text (compact leading)
+    val notesText = report.notes?.takeIf { it.isNotBlank() } ?: "-"
+    val notesParagraph = Paragraph(notesText, robotoLight.apply {
         color = Color.BLACK
         size = 10f
-    })
+    }).apply {
+        // compact line spacing:
+        // fixedLeading = 0f, multipliedLeading = 1.1f
+        setLeading(0f, 1.1f)
+        spacingBefore = 0f
+        spacingAfter = 0f
+    }
+
     val notesCell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
-        setPadding(4f)
+        setPadding(3f) // tighter
         addElement(notesParagraph)
     }
     table.addCell(notesCell)
 
-    // RIGHT (1/3): schema image from resources
+    // RIGHT (1/3): schema image from resources (cap height)
     val imageCell = PdfPCell().apply {
         border = Rectangle.NO_BORDER
         horizontalAlignment = Element.ALIGN_CENTER
         verticalAlignment = Element.ALIGN_MIDDLE
-        setPadding(4f)
-        minimumHeight = 120f // gives the cell a little height even if the image is small
+        setPadding(3f)
+        minimumHeight = 0f
     }
 
     try {
@@ -344,11 +361,13 @@ private fun addNotesSection(document: Document, report: Report) {
 
         val tableInnerWidth = document.right() - document.left()
         val maxImgWidth = (tableInnerWidth * (1f / 3f)) - 12f
+        val maxImgHeight = 220f // <--- hard cap height to keep everything on page 1
 
-        if (img.width > maxImgWidth) {
-            val scale = maxImgWidth / img.width
-            img.scaleAbsolute(img.width * scale, img.height * scale)
-        }
+        // scale proportionally to BOTH constraints
+        val wScale = if (img.width > maxImgWidth) maxImgWidth / img.width else 1f
+        val hScale = if (img.height > maxImgHeight) maxImgHeight / img.height else 1f
+        val scale = minOf(wScale, hScale)
+        if (scale < 1f) img.scaleAbsolute(img.width * scale, img.height * scale)
 
         imageCell.addElement(img)
     } catch (e: Exception) {
@@ -361,7 +380,6 @@ private fun addNotesSection(document: Document, report: Report) {
     }
 
     table.addCell(imageCell)
-
     document.add(table)
 }
 

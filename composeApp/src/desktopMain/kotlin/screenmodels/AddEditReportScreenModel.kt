@@ -25,11 +25,14 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
     var workFinishDate by mutableStateOf(report?.workFinishDate)
     var operators by mutableStateOf(report?.operators?.toMutableStateList() ?: mutableStateListOf())
     var type by mutableStateOf(report?.type)
+    var depthAfterCleaning by mutableStateOf(report?.depthAfterCleaning)
     var depth by mutableStateOf(report?.depth)
     var staticLevel by mutableStateOf(report?.staticLevel)
     var dynamicLevel by mutableStateOf(report?.dynamicLevel)
     var pumpShimming by mutableStateOf(report?.pumpShimming)
+    var secondPumpShimming by mutableStateOf(report?.secondPumpShimming)
     var speed by mutableStateOf(report?.speed)
+    var current by mutableStateOf(report?.current)
     var engine by mutableStateOf(report?.engine)
     var pump by mutableStateOf(report?.pump)
     var elements by mutableStateOf(report?.elements?.toMutableStateList() ?: mutableStateListOf())
@@ -117,13 +120,16 @@ class AddEditReportScreenModel(private val report: Report? = null) : ScreenModel
                 clientOwnerId = selectedClient!!.clientId,
                 operators = operators,
                 type = type!!,
+                depthAfterCleaning = depthAfterCleaning,
                 company = company,
                 wellDrilling = wellDrilling!!, // "forage/pompe"
                 asker = asker!!,
                 staticLevel = staticLevel,
                 dynamicLevel = dynamicLevel,
                 pumpShimming = pumpShimming,
+                secondPumpShimming = secondPumpShimming,
                 speed = speed,
+                current = current,
                 engine = engine,
                 pump = pump,
                 elements = elements,
